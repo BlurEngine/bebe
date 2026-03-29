@@ -1,0 +1,37 @@
+name: Bug report
+description: Report a problem with the framework package or embedded testing harness.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How can we reproduce it?
+      description: Include commands, framework usage, config, and any relevant files.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Include your Node.js version, package manager, operating system, and whether the issue appears in:
+
+        - the `@blurengine/bebe` package directly
+        - the embedded `testing/bds-project` harness
+        - a generated `blr` project consuming `@blurengine/bebe`
+    validations:
+      required: true

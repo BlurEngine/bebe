@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": ["src/**/*", "__mocks__/**/*"],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules",
+    "src/**/*.test.ts",
+    "src/test.ts",
+    "src/test-support/**/*",
+    "test/**/*"
+  ],
+  "compilerOptions": {
+    "outDir": "lib",
+    "declarationDir": "temp/types",
+    "declarationMap": true,
+    "sourceMap": true,
+    "module": "node16",
+    "moduleResolution": "node16",
+    "lib": ["ES2023", "DOM"]
+    // "paths": {
+    //     "@blurengine/bebe/maths": [
+    //         "./lib/maths/index.js"
+    //     ]
+    // }
+  }
+}

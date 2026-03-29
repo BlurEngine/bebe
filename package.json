@@ -1,0 +1,86 @@
+{
+  "name": "@blurengine/bebe",
+  "version": "1.0.0",
+  "description": "Context and lifecycle utilities for Minecraft Bedrock scripting",
+  "keywords": [
+    "blurengine",
+    "minecraft",
+    "bedrock",
+    "framework",
+    "scripting"
+  ],
+  "author": "Blur Engine Limited",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/BlurEngine/bebe",
+  "bugs": {
+    "url": "https://github.com/BlurEngine/bebe/issues"
+  },
+  "contributors": [
+    {
+      "name": "Ali Moghnieh",
+      "email": "ali@blurengine.com"
+    }
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/index.js",
+      "types": "./lib/types/bebe-public.d.ts"
+    }
+  },
+  "type": "module",
+  "types": "./lib/types/bebe-public.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BlurEngine/bebe.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "npm@10.8.2",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE",
+    "lib"
+  ],
+  "scripts": {
+    "clean": "node ./scripts/clean.mjs",
+    "compile": "tsc -p tsconfig.json",
+    "generate:types": "node ./scripts/generate-types.js",
+    "build": "npm run clean && npm run compile && npm run generate:types",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint ./src ./test --ext .ts",
+    "lint:fix": "eslint ./src ./test --ext .ts --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "npm run test",
+    "pack:dry-run": "npm pack --dry-run",
+    "check": "npm run format:check && npm run build && npm run test:unit && npm run pack:dry-run",
+    "hooks:install": "node ./scripts/install-hooks.mjs",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish",
+    "prepack": "npm run build",
+    "prepare": "npm run hooks:install"
+  },
+  "peerDependencies": {
+    "@minecraft/server": "^2.3.0"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
+    "@changesets/cli": "^2.29.7",
+    "@minecraft/server": "^2.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
+    "dts-buddy": "^0.7.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-minecraft-linting": "^2.0.10",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
