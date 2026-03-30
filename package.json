@@ -1,6 +1,6 @@
 {
   "name": "@blurengine/bebe",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Context and lifecycle utilities for Minecraft Bedrock scripting",
   "keywords": [
     "blurengine",
