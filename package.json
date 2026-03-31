@@ -1,7 +1,7 @@
 {
   "name": "@blurengine/bebe",
   "version": "0.1.0",
-  "description": "Context and lifecycle utilities for Minecraft Bedrock scripting",
+  "description": "Blur Engine game library for Minecraft: Bedrock Edition Scripting API",
   "keywords": [
     "blurengine",
     "minecraft",
@@ -24,6 +24,10 @@
   "exports": {
     ".": {
       "import": "./lib/index.js",
+      "types": "./lib/types/bebe-public.d.ts"
+    },
+    "./maths": {
+      "import": "./lib/maths/index.js",
       "types": "./lib/types/bebe-public.d.ts"
     }
   },

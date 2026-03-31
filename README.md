@@ -1,35 +1,52 @@
 # BlurEngine Bebe
 
-Standalone context and lifecycle utilities for Minecraft Bedrock scripting.
+Game engine library for Minecraft Bedrock scripting.
 
-## Package
+> Warning: `bebe` is still in an early stage of development. Backward compatibility is not guaranteed yet, and breaking changes may happen while the public engine surface is still being shaped.
 
-- `@blurengine/bebe`: context and lifecycle layer for Minecraft Bedrock scripting
+## Packages
+
+- `@blurengine/bebe`: engine lifecycle, ownership, and runtime primitives
+- `@blurengine/bebe/maths`: vectors, AABBs, tweens, and numeric helpers
 - `npm install @blurengine/bebe @minecraft/server`
-- exports: `@blurengine/bebe`
 
-## Usage
+## Quick Start
 
 ```ts
 import { Context } from "@blurengine/bebe";
+import { tweenNumber } from "@blurengine/bebe/maths";
 
 const ctx = new Context();
 
-ctx.timeout(20, () => {
-  // ...
+tweenNumber(ctx, {
+  from: 0,
+  to: 1,
+  durationTicks: 20,
+  onUpdate(value) {
+    console.warn(`progress: ${Math.round(value * 100)}%`);
+  },
 });
-
-ctx.dispose();
 ```
 
-## Docs
+## What Bebe Is For
 
+- Provide a game engine layer for Bedrock scripting that can own runtime work, compose features, and grow into higher-level engine systems over time.
+- Keep timers, subscriptions, spawned feature scopes, and other runtime work owned by one `Context`.
+- Provide a separate maths surface for vector, AABB, tween, and scalar helpers without making the root package feel overloaded.
+
+## Documentation
+
+- [Docs Index](./docs/README.md)
+- [Context Guide](./docs/guides/context.md)
+- [Maths Guide](./docs/guides/maths.md)
 - [Changelog](./CHANGELOG.md)
 
-## Local Development
+## Development
 
-- `npm install`
-- `npm run check`
+```bash
+npm install
+npm run check
+```
 
 ## License
 
