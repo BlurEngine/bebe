@@ -1,14 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import * as bebe from "../src/index.js";
+import * as bebe from "@blurengine/bebe";
+import * as bedrock from "@blurengine/bebe/bedrock";
 import {
     Context,
     ROOT_CONTEXT,
     RootContext,
     createServiceKey,
     isRootContext,
-} from "../src/context.js";
+    stagger,
+    staggerGroups,
+} from "@blurengine/bebe";
 
 const packageJsonPath = path.resolve(import.meta.dirname, "..", "package.json");
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
@@ -16,7 +19,7 @@ const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
 };
 
 describe("package root exports", () => {
-    it("re-exports the context surface only", () => {
+    it("re-exports the runtime ownership surface", () => {
         expect(Object.keys(bebe).sort()).toEqual(
             [
                 "Context",
@@ -26,22 +29,50 @@ describe("package root exports", () => {
                 "isRootContext",
                 "isValidContext",
                 "mustContext",
+                "stagger",
+                "staggerGroups",
             ].sort(),
         );
     });
 
-    it("matches the direct context exports", () => {
+    it("matches the direct root exports", () => {
         expect(bebe.Context).toBe(Context);
         expect(bebe.ROOT_CONTEXT).toBe(ROOT_CONTEXT);
         expect(bebe.RootContext).toBe(RootContext);
         expect(bebe.createServiceKey).toBe(createServiceKey);
         expect(bebe.isRootContext).toBe(isRootContext);
+        expect(bebe.stagger).toBe(stagger);
+        expect(bebe.staggerGroups).toBe(staggerGroups);
     });
 
-    it("declares the context root and maths subpath exports", () => {
+    it("exposes the bedrock subpath", () => {
+        expect(Object.keys(bedrock).sort()).toEqual(
+            [
+                "applyDurabilityToItem",
+                "applyDurabilityToSelectedSlot",
+                "applyDurabilityToSlot",
+                "attemptBedrock",
+                "destroyBlockAt",
+                "getBlockAt",
+                "getBlockTypeId",
+                "getRemainingItemUses",
+                "getSelectedSlot",
+                "getSlotItem",
+                "isAirBlock",
+                "isLiquidBlock",
+                "setBlockTypeAt",
+            ].sort(),
+        );
+    });
+
+    it("declares the root, bedrock, and maths exports", () => {
         expect(packageJson.exports).toEqual({
             ".": {
                 import: "./lib/index.js",
+                types: "./lib/types/bebe-public.d.ts",
+            },
+            "./bedrock": {
+                import: "./lib/bedrock/index.js",
                 types: "./lib/types/bebe-public.d.ts",
             },
             "./maths": {

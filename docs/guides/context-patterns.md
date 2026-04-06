@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This guide shows the main ways to structure feature lifetimes with `Context`.
+This guide shows the main ways to structure runtime lifetimes with `Context`.
 
 Use it when you already understand what `Context` is, but you want a clearer sense of how many scopes to create, where services belong, and when `use(...)` is the right tool.
 

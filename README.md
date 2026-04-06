@@ -6,8 +6,9 @@ Game engine library for Minecraft Bedrock scripting.
 
 ## Packages
 
-- `@blurengine/bebe`: engine lifecycle, ownership, and runtime primitives
-- `@blurengine/bebe/maths`: vectors, AABBs, tweens, and numeric helpers
+- `@blurengine/bebe`: engine lifecycle, ownership, and runtime scheduling primitives
+- `@blurengine/bebe/bedrock`: Bedrock edge helpers for block, slot, item, and durability work
+- `@blurengine/bebe/maths`: vectors, facings, AABBs, voxel/grid helpers, tweens, and numeric helpers
 - `npm install @blurengine/bebe @minecraft/server`
 
 ## Quick Start
@@ -30,15 +31,20 @@ tweenNumber(ctx, {
 
 ## What Bebe Is For
 
-- Provide a game engine layer for Bedrock scripting that can own runtime work, compose features, and grow into higher-level engine systems over time.
-- Keep timers, subscriptions, spawned feature scopes, and other runtime work owned by one `Context`.
-- Provide a separate maths surface for vector, AABB, tween, and scalar helpers without making the root package feel overloaded.
+- Provide a game engine layer for Bedrock scripting that can own runtime work, compose runtime systems, and grow into higher-level engine systems over time.
+- Keep timers, subscriptions, spawned child scopes, and other runtime work owned by one `Context`.
+- Provide small runtime helpers for staging owned work over ticks.
+- Keep Bedrock-specific friction at the edge through reusable helpers instead of repeating the same safety and fallback code inside gameplay features.
+- Provide a separate maths surface for vector, facing, AABB, voxel/grid, tween, and scalar helpers without making the root package feel overloaded.
 
 ## Documentation
 
 - [Docs Index](./docs/README.md)
 - [Context Guide](./docs/guides/context.md)
+- [Stagger Guide](./docs/guides/stagger.md)
+- [Bedrock Guide](./docs/guides/bedrock.md)
 - [Maths Guide](./docs/guides/maths.md)
+- [Voxels Guide](./docs/guides/voxels.md)
 - [Changelog](./CHANGELOG.md)
 
 ## Development

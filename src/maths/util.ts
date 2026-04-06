@@ -241,41 +241,13 @@ export function roundTo(n: number, decimals: number): number {
 }
 
 /**
- * Squared length of a 3D vector.
- */
-export function lengthSquared3(v: Vec3Init): number {
-    return v.x * v.x + v.y * v.y + v.z * v.z;
-}
-
-/**
- * Length of a 3D vector.
- */
-export function length3(v: Vec3Init): number {
-    return Math.sqrt(lengthSquared3(v));
-}
-
-/**
- * Squared distance between two 3D points.
- */
-export function distanceSquared3(a: Vec3Init, b: Vec3Init): number {
-    return lengthSquared3({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
-}
-
-/**
- * Distance between two 3D points.
- */
-export function distance3(a: Vec3Init, b: Vec3Init): number {
-    return length3({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
-}
-
-/**
  * Normalize a 3D vector safely; returns fallback if length is ~0.
  */
 export function normalizeSafe3(
     v: Vec3Init,
     fallback: Vec3Init = { x: 0, y: 0, z: 0 },
 ): Vec3Init {
-    const m2 = lengthSquared3(v);
+    const m2 = v.x * v.x + v.y * v.y + v.z * v.z;
     if (approxZero(m2, EPSILON * EPSILON)) return fallback;
     const inv = 1 / Math.sqrt(m2);
     return { x: v.x * inv, y: v.y * inv, z: v.z * inv };

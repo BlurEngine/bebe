@@ -7,13 +7,17 @@
 It provides:
 
 - vector classes for authored code
+- facing helpers for block-adjacent offsets
 - AABB utilities for spatial work
+- voxel/grid helpers for keyed locations and breadth-first traversal
 - tween helpers for tick-based interpolation
 - scalar helpers for common numeric jobs
 
 ## Use It When
 
 - authored gameplay code needs readable vector or AABB operations
+- code needs a stable vocabulary for block-adjacent offsets
+- code needs keyed voxel locations or breadth-first grid traversal
 - a feature needs tweening over Bedrock ticks
 - scalar helper functions are enough and a full class wrapper would be unnecessary
 - Bedrock API values need light interop without building a second maths vocabulary around them
@@ -23,9 +27,13 @@ It provides:
 The package has one main split:
 
 - `Vec2`, `Vec3`, and `AABB` are the primary authored APIs
+- `Facing` is the primary authored term for Bedrock's block-adjacent `Direction` enum
+- voxel/grid helpers live beside the main maths types because they are spatial
+  traversal helpers over the same `Vec3` model
 - raw utility functions exist for Bedrock interop, scalar queries, and low-allocation edge work
 
-This keeps authored gameplay code readable without forcing everything through class allocation when you only need a single scalar answer.
+This keeps authored gameplay code readable, while still leaving raw helpers in
+place for Bedrock interop and non-vector numeric work.
 
 ## Important Behaviours
 
@@ -38,18 +46,78 @@ This keeps authored gameplay code readable without forcing everything through cl
 - constructors accept numeric and vector-like input; string parsing lives in `parse(...)`
 - normalization uses epsilon-safe zero checks
 
-If you are writing new authored logic, prefer the classes. If you are consuming a Bedrock `{ x, y, z }` shape and only need a small scalar query, the raw helpers have a place.
+If you are writing new authored logic, prefer the classes. If you are consuming
+a Bedrock `{ x, y, z }` shape and only need one vector query, wrap it in
+`Vec3` and use the class API directly.
+
+### `Facing`
+
+`Facing` is `bebe`'s word for the six unit block offsets around one origin
+block.
+
+It builds directly on Bedrock's `Direction` enum, but uses engine vocabulary so
+future code can distinguish:
+
+- `Facing` for block-adjacent offsets
+- `direction` for arbitrary vectors or look/orientation math
+
+Key helpers are:
+
+- `Facing`
+- `FACING_OFFSETS`
+- `HORIZONTAL_FACING_OFFSETS`
+- `VERTICAL_FACING_OFFSETS`
+- `createSurroundingOffsets(...)`
+- `SURROUNDING_OFFSETS`
+
+`FACING_OFFSETS` follows Bedrock's enum contract exactly. In particular,
+Bedrock's `Direction.North` maps to `z + 1` and `Direction.South` maps to
+`z - 1`.
+
+`createSurroundingOffsets(...)` generates the surrounding offset pattern. By
+default it matches `SURROUNDING_OFFSETS`, but it can optionally include the
+origin and scale the step distance to produce the same pattern farther away.
 
 ### `AABB`
 
 `AABB` is a normalised axis-aligned bounding box.
 
-- constructor input order does not matter; min/max are normalised internally
+Its public field vocabulary matches Bedrock's `AABB`:
+
+- `center`
+- `extent`
+
+Derived `min` and `max` getters are still available when code needs corner
+coordinates or BlockBoundingBox-style work.
+
+- constructor input order does not matter; boxes are normalised internally
+- Bedrock-style `{ center, extent }` input is supported directly
+- `extent` is always treated as positive, matching Bedrock's contract
+- the class itself stays immutable; use `toObject()` when a plain mutable
+  Bedrock-style `{ center, extent }` object is needed
+- `toBlockBoundingBox()` returns `{ min, max }` when a BlockBoundingBox shape is needed
 - `toBlockSpan(...)` and `blocks(...)` share the same bounds contract
 - block iteration defaults to `"inclusive"` bounds
 - `"half-open"` bounds are available when adjacent spans should compose without double-counting shared edges
 
 `"half-open"` means the min edge is included and the max edge is excluded. That is often useful when multiple boxes represent neighboring regions in an integer grid.
+
+### Voxel Helpers
+
+Voxel helpers stay in the maths surface because they operate on the same
+spatial model as `Vec3`, `Facing`, and `AABB`.
+
+Key helpers are:
+
+- `getVoxelKey(...)`
+- `parseVoxelKey(...)`
+- `createFacingVoxelOffsets(...)`
+- `floodFillVoxels(...)`
+
+These helpers are for keyed integer-grid work, adjacency, and breadth-first
+region capture. They still use `Vec3Like` inputs and `Vec3` outputs so they
+compose naturally with the rest of the maths surface. When code needs to offset
+one voxel location, prefer `new Vec3(location).add(offset)` directly.
 
 ### Tweens
 
@@ -87,8 +155,23 @@ Prefer class methods when:
 - readability matters more than avoiding one wrapper allocation
 - you want chained vector operations
 
+Prefer the facing helpers when:
+
+- you mean one of the six block-adjacent offsets
+- you want code to read in terms of block facings rather than raw offset lists
+- future Bedrock-facing interop may need to line up with `Direction`
+- you need either the canonical one-block surround or a scaled surrounding
+  pattern
+
+Prefer the voxel helpers when:
+
+- you need stable keys for integer grid locations
+- you are walking connected regions in block space
+- you want breadth-first depth information during traversal
+
 Prefer raw helpers when:
 
 - you are at a Bedrock API boundary
-- you only need one scalar answer such as distance or length
-- you want to avoid building a second object just to ask a simple question
+- you are doing scalar math rather than vector behaviour
+- a utility already expresses the behaviour more clearly than stitching
+  together multiple method calls

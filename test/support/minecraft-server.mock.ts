@@ -62,6 +62,23 @@ export const system = {
     },
 };
 
+export const EntityComponentTypes = {
+    Inventory: "minecraft:inventory",
+} as const;
+
+export const ItemComponentTypes = {
+    Durability: "minecraft:durability",
+} as const;
+
+export enum Direction {
+    Down = "Down",
+    East = "East",
+    North = "North",
+    South = "South",
+    Up = "Up",
+    West = "West",
+}
+
 export const world = {
     beforeEvents: {
         entityRemove: {

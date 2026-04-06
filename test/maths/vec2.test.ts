@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Vec2 } from "../../src/maths/vec2.js";
+import { Vec2 } from "@blurengine/bebe/maths";
 
 describe("maths/Vec2", () => {
     it("constructs from numbers, tuples, and objects, and parses strings explicitly", () => {

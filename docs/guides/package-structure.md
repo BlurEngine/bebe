@@ -15,17 +15,27 @@ Use it when you are choosing imports, navigating the codebase, or deciding where
 
 ## Core Model
 
-`bebe` has two public package surfaces today:
+`bebe` has three public package surfaces today:
 
 - `@blurengine/bebe`
+- `@blurengine/bebe/bedrock`
 - `@blurengine/bebe/maths`
 
 The root package stays focused on lifecycle and runtime ownership.
 
+The Bedrock subpath holds:
+
+- safe block reads
+- block mutation helpers
+- slot and item helpers
+- durability helpers
+
 The maths subpath holds:
 
 - vectors
+- facings
 - AABBs
+- voxel/grid helpers
 - tweens
 - numeric helpers
 
@@ -44,6 +54,7 @@ The public authored entrypoints are:
 As a consumer, the important import paths are:
 
 - `@blurengine/bebe`
+- `@blurengine/bebe/bedrock`
 - `@blurengine/bebe/maths`
 
 ### `src/`
@@ -53,7 +64,9 @@ This is the authored source tree.
 Current top-level authored areas:
 
 - [src/context.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/context.ts) for lifecycle ownership
-- [`src/maths/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/maths) for the maths surface
+- [src/stagger.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/stagger.ts) for staged owned work
+- [`src/bedrock/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/bedrock) for Bedrock API edge helpers
+- [`src/maths/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/maths) for the maths surface, including voxel/grid helpers
 - [`src/test-support/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/test-support) for test-only helpers
 
 ### `test/`
@@ -92,14 +105,16 @@ It is the package build result, not the authored source of truth.
 ## Choosing The Right Import Path
 
 - lifecycle and runtime ownership -> `@blurengine/bebe`
-- vectors, AABBs, tweens, and numeric helpers -> `@blurengine/bebe/maths`
+- Bedrock API edge helpers -> `@blurengine/bebe/bedrock`
+- vectors, facings, AABBs, voxel/grid helpers, tweens, and numeric helpers -> `@blurengine/bebe/maths`
 
 Consumers should import from the public package entrypoints, not from `src/` or `lib/`.
 
 ## Choosing The Right Repo Location
 
 - new lifecycle or runtime ownership primitive -> root package surface
-- new maths primitive or maths helper -> `src/maths/`
+- new Bedrock edge helper -> `src/bedrock/`
+- new maths primitive, voxel/grid helper, or traversal helper -> `src/maths/`
 - tests -> `test/`
 - reader-facing usage and behaviour docs -> `docs/guides/`
 - repo automation -> `scripts/`

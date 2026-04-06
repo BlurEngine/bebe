@@ -6,7 +6,7 @@ import {
     isRootContext,
     isValidContext,
     mustContext,
-} from "../src/context.js";
+} from "@blurengine/bebe";
 import {
     minecraftMockControl,
     system,

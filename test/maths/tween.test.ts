@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Context } from "../../src/context.js";
+import { Context } from "@blurengine/bebe";
 import {
     Easings,
     cubicBezier,
@@ -8,7 +8,7 @@ import {
     tweenParallel,
     tweenSequence,
     tweenVec3,
-} from "../../src/maths/tween.js";
+} from "@blurengine/bebe/maths";
 import { minecraftMockControl } from "../support/minecraft-server.mock.js";
 
 beforeEach(() => {

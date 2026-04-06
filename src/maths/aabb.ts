@@ -1,16 +1,14 @@
+import type {
+    AABB as MinecraftAABB,
+    BlockBoundingBox,
+} from "@minecraft/server";
 import { clamp, EPSILON } from "./util.js";
 import { isVec3Like, Vec3, type Vec3Init, type Vec3Like } from "./vec3.js";
 
 /**
- * Structural alias for the Minecraft Scripting API BlockBoundingBox.
- * This shape is compatible with {@link @minecraft/server!BlockBoundingBox} without adding a type dependency.
- */
-export type BlockBoundingBoxLike = { min: Vec3Like; max: Vec3Like };
-
-/**
  * Box input accepted by AABB conversion helpers.
  */
-export type AABBInput = AABB | BlockBoundingBoxLike;
+export type AABBInput = AABB | MinecraftAABB | BlockBoundingBox;
 
 /**
  * Block-iteration bounds mode for integer spans derived from an AABB.
@@ -38,26 +36,36 @@ export type BlockSpan = {
 
 /**
  * A lenient axis-aligned bounding box with common utilities.
- * The instance shape `{ min, max }` is intentionally compatible with the
- * Minecraft Scripting API BlockBoundingBox. `min` and `max` are always
- * normalized so that `min <= max` on all axes.
+ *
+ * The class uses Bedrock's `center` and `extent` vocabulary, but remains
+ * immutable. Use {@link toObject} when a plain mutable
+ * {@link @minecraft/server!AABB}-shaped object is needed. `extent` is always
+ * normalized to positive values. Derived `min` and `max` getters remain
+ * available for box-corner work.
  */
-export class AABB implements BlockBoundingBoxLike {
-    private readonly _min: Vec3;
-    private readonly _max: Vec3;
+export class AABB {
+    private readonly _center: Vec3;
+    private readonly _extent: Vec3;
 
+    get center(): Vec3 {
+        return this._center;
+    }
+    get extent(): Vec3 {
+        return this._extent;
+    }
     get min(): Vec3 {
-        return this._min;
+        return this._center.subtract(this._extent);
     }
     get max(): Vec3 {
-        return this._max;
+        return this._center.add(this._extent);
     }
 
     /**
-     * Construct from `{ min, max }` or `(min, max)` or 6 numbers.
-     * Any ordering of corners is accepted; the box is normalized.
+     * Construct from `{ center, extent }`, `{ min, max }`, `(min, max)`, or 6
+     * numbers. Any ordering of corners is accepted; the box is normalized.
      */
-    constructor(box: BlockBoundingBoxLike);
+    constructor(box: MinecraftAABB);
+    constructor(box: BlockBoundingBox);
     constructor(min: Vec3Like, max: Vec3Like);
     constructor(
         minX: number,
@@ -68,62 +76,75 @@ export class AABB implements BlockBoundingBoxLike {
         maxZ: number,
     );
     constructor(
-        a: BlockBoundingBoxLike | Vec3Like | number,
+        a: MinecraftAABB | BlockBoundingBox | Vec3Like | number,
         b?: Vec3Like | number,
         c?: number,
         d?: number,
         e?: number,
         f?: number,
     ) {
-        let min: Vec3;
-        let max: Vec3;
+        let center: Vec3;
+        let extent: Vec3;
 
         if (typeof a === "number") {
-            min = new Vec3(a, b as number, c as number);
-            max = new Vec3(d as number, e as number, f as number);
+            ({ center, extent } = AABB.toCenterExtentFromMinMax(
+                new Vec3(a, b as number, c as number),
+                new Vec3(d as number, e as number, f as number),
+            ));
+        } else if (isAABBShapeLike(a)) {
+            center = new Vec3(a.center);
+            extent = AABB.normalizeExtent(a.extent);
         } else if (isBlockBoundingBoxLike(a)) {
-            min = new Vec3(a.min);
-            max = new Vec3(a.max);
+            ({ center, extent } = AABB.toCenterExtentFromMinMax(
+                new Vec3(a.min),
+                new Vec3(a.max),
+            ));
         } else {
-            min = new Vec3(a);
-            max = new Vec3(b as Vec3Like);
+            ({ center, extent } = AABB.toCenterExtentFromMinMax(
+                new Vec3(a),
+                new Vec3(b as Vec3Like),
+            ));
         }
 
-        const n = AABB.normalizeMinMax(min, max);
-        this._min = n.min;
-        this._max = n.max;
+        this._center = center;
+        this._extent = extent;
     }
 
     /** Return the 8 corners of the box (min-inclusive, max-inclusive). */
     corners(): [Vec3, Vec3, Vec3, Vec3, Vec3, Vec3, Vec3, Vec3] {
+        const min = this.min;
+        const max = this.max;
+
         return [
-            new Vec3(this._min.x, this._min.y, this._min.z),
-            new Vec3(this._max.x, this._min.y, this._min.z),
-            new Vec3(this._min.x, this._max.y, this._min.z),
-            new Vec3(this._max.x, this._max.y, this._min.z),
-            new Vec3(this._min.x, this._min.y, this._max.z),
-            new Vec3(this._max.x, this._min.y, this._max.z),
-            new Vec3(this._min.x, this._max.y, this._max.z),
-            new Vec3(this._max.x, this._max.y, this._max.z),
+            new Vec3(min.x, min.y, min.z),
+            new Vec3(max.x, min.y, min.z),
+            new Vec3(min.x, max.y, min.z),
+            new Vec3(max.x, max.y, min.z),
+            new Vec3(min.x, min.y, max.z),
+            new Vec3(max.x, min.y, max.z),
+            new Vec3(min.x, max.y, max.z),
+            new Vec3(max.x, max.y, max.z),
         ];
     }
 
     /** Half extents (size / 2). */
     halfExtents(): Vec3 {
-        const s = this.size();
-        return new Vec3(s.x * 0.5, s.y * 0.5, s.z * 0.5);
+        return this.extent;
     }
 
     /** Expand box to include a point, returning a new box. */
     expandToIncludePoint(p: Vec3Like): AABB {
         const point = new Vec3(p);
+        const min = this.min;
+        const max = this.max;
+
         return new AABB(
-            Math.min(this._min.x, point.x),
-            Math.min(this._min.y, point.y),
-            Math.min(this._min.z, point.z),
-            Math.max(this._max.x, point.x),
-            Math.max(this._max.y, point.y),
-            Math.max(this._max.z, point.z),
+            Math.min(min.x, point.x),
+            Math.min(min.y, point.y),
+            Math.min(min.z, point.z),
+            Math.max(max.x, point.x),
+            Math.max(max.y, point.y),
+            Math.max(max.z, point.z),
         );
     }
 
@@ -133,22 +154,24 @@ export class AABB implements BlockBoundingBoxLike {
      */
     toBlockSpan(options?: BlockBoundsOptions): BlockSpan {
         const bounds = options?.bounds ?? "inclusive";
+        const minPoint = this.min;
+        const maxPoint = this.max;
         const min = {
-            x: Math.floor(this._min.x),
-            y: Math.floor(this._min.y),
-            z: Math.floor(this._min.z),
+            x: Math.floor(minPoint.x),
+            y: Math.floor(minPoint.y),
+            z: Math.floor(minPoint.z),
         };
         const max =
             bounds === "inclusive"
                 ? {
-                      x: Math.floor(this._max.x),
-                      y: Math.floor(this._max.y),
-                      z: Math.floor(this._max.z),
+                      x: Math.floor(maxPoint.x),
+                      y: Math.floor(maxPoint.y),
+                      z: Math.floor(maxPoint.z),
                   }
                 : {
-                      x: Math.ceil(this._max.x),
-                      y: Math.ceil(this._max.y),
-                      z: Math.ceil(this._max.z),
+                      x: Math.ceil(maxPoint.x),
+                      y: Math.ceil(maxPoint.y),
+                      z: Math.ceil(maxPoint.z),
                   };
         return { min, max };
     }
@@ -208,6 +231,16 @@ export class AABB implements BlockBoundingBoxLike {
         return new AABB(c.subtract(r), c.add(r));
     }
 
+    /** Create a box from a Bedrock-style center and extent. */
+    static fromCenterExtent(center: Vec3Like, extent: Vec3Like): AABB {
+        const centerPoint = new Vec3(center);
+        const extentPoint = AABB.normalizeExtent(extent);
+        return new AABB(
+            centerPoint.subtract(extentPoint),
+            centerPoint.add(extentPoint),
+        );
+    }
+
     /** Create a box from a point and size with an anchor: 'min' | 'max' | 'center'. */
     static fromSize(
         point: Vec3Like,
@@ -235,54 +268,41 @@ export class AABB implements BlockBoundingBoxLike {
 
     /** Size (width, height, depth). */
     size(): Vec3 {
-        return this._max.subtract(this._min);
-    }
-
-    /** Center point. */
-    center(): Vec3 {
-        const s = this.size();
-        return new Vec3(
-            this._min.x + s.x * 0.5,
-            this._min.y + s.y * 0.5,
-            this._min.z + s.z * 0.5,
-        );
-    }
-
-    /** Width (x-extent). */
-    width(): number {
-        return this._max.x - this._min.x;
-    }
-
-    /** Height (y-extent). */
-    height(): number {
-        return this._max.y - this._min.y;
-    }
-
-    /** Depth (z-extent). */
-    depth(): number {
-        return this._max.z - this._min.z;
+        return this._extent.multiply(2);
     }
 
     /** Volume (can be zero). */
     volume(): number {
-        const s = this.size();
-        return s.x * s.y * s.z;
+        return this.width() * this.height() * this.depth();
+    }
+
+    /** Width (x-extent). */
+    width(): number {
+        return this._extent.x * 2;
+    }
+
+    /** Height (y-extent). */
+    height(): number {
+        return this._extent.y * 2;
+    }
+
+    /** Depth (z-extent). */
+    depth(): number {
+        return this._extent.z * 2;
     }
 
     /** True if the box dimensions are effectively zero (within epsilon). */
     isEmpty(epsilon = EPSILON): boolean {
-        const s = this.size();
         return (
-            Math.abs(s.x) <= epsilon &&
-            Math.abs(s.y) <= epsilon &&
-            Math.abs(s.z) <= epsilon
+            Math.abs(this._extent.x) * 2 <= epsilon &&
+            Math.abs(this._extent.y) * 2 <= epsilon &&
+            Math.abs(this._extent.z) * 2 <= epsilon
         );
     }
 
     /** Translate by an offset. */
     translate(offset: Vec3Like): AABB {
-        const o = new Vec3(offset);
-        return new AABB(this._min.add(o), this._max.add(o));
+        return new AABB(this.min.add(offset), this.max.add(offset));
     }
 
     /** Expand (inflate) by a scalar or vector on all sides. */
@@ -291,86 +311,94 @@ export class AABB implements BlockBoundingBoxLike {
             typeof amount === "number"
                 ? new Vec3(amount, amount, amount)
                 : new Vec3(amount);
-        return new AABB(this._min.subtract(v), this._max.add(v));
+        return new AABB(this.min.subtract(v), this.max.add(v));
     }
 
     /** Union with another box (smallest box containing both). */
-    union(other: BlockBoundingBoxLike): AABB {
+    union(other: BlockBoundingBox): AABB {
         const o = AABB.from(other);
+        const min = this.min;
+        const max = this.max;
         return new AABB(
-            Math.min(this._min.x, o.min.x),
-            Math.min(this._min.y, o.min.y),
-            Math.min(this._min.z, o.min.z),
-            Math.max(this._max.x, o.max.x),
-            Math.max(this._max.y, o.max.y),
-            Math.max(this._max.z, o.max.z),
+            Math.min(min.x, o.min.x),
+            Math.min(min.y, o.min.y),
+            Math.min(min.z, o.min.z),
+            Math.max(max.x, o.max.x),
+            Math.max(max.y, o.max.y),
+            Math.max(max.z, o.max.z),
         );
     }
 
     /** Intersection with another box, or `undefined` if disjoint. */
-    intersection(other: BlockBoundingBoxLike): AABB | undefined {
+    intersection(other: BlockBoundingBox): AABB | undefined {
         const o = AABB.from(other);
-        const minX = Math.max(this._min.x, o.min.x);
-        const minY = Math.max(this._min.y, o.min.y);
-        const minZ = Math.max(this._min.z, o.min.z);
-        const maxX = Math.min(this._max.x, o.max.x);
-        const maxY = Math.min(this._max.y, o.max.y);
-        const maxZ = Math.min(this._max.z, o.max.z);
+        const min = this.min;
+        const max = this.max;
+        const minX = Math.max(min.x, o.min.x);
+        const minY = Math.max(min.y, o.min.y);
+        const minZ = Math.max(min.z, o.min.z);
+        const maxX = Math.min(max.x, o.max.x);
+        const maxY = Math.min(max.y, o.max.y);
+        const maxZ = Math.min(max.z, o.max.z);
         if (minX > maxX || minY > maxY || minZ > maxZ) return undefined;
         return new AABB(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
     /** True if boxes overlap. `inclusive=true` counts touching faces as intersecting. */
-    intersects(other: BlockBoundingBoxLike, inclusive = true): boolean {
+    intersects(other: BlockBoundingBox, inclusive = true): boolean {
         const o = AABB.from(other);
+        const min = this.min;
+        const max = this.max;
         if (inclusive) {
             return (
-                this._min.x <= o.max.x &&
-                this._max.x >= o.min.x &&
-                this._min.y <= o.max.y &&
-                this._max.y >= o.min.y &&
-                this._min.z <= o.max.z &&
-                this._max.z >= o.min.z
+                min.x <= o.max.x &&
+                max.x >= o.min.x &&
+                min.y <= o.max.y &&
+                max.y >= o.min.y &&
+                min.z <= o.max.z &&
+                max.z >= o.min.z
             );
         }
         return (
-            this._min.x < o.max.x &&
-            this._max.x > o.min.x &&
-            this._min.y < o.max.y &&
-            this._max.y > o.min.y &&
-            this._min.z < o.max.z &&
-            this._max.z > o.min.z
+            min.x < o.max.x &&
+            max.x > o.min.x &&
+            min.y < o.max.y &&
+            max.y > o.min.y &&
+            min.z < o.max.z &&
+            max.z > o.min.z
         );
     }
 
     /** True if point is inside (within) the box. */
     containsPoint(p: Vec3Like, inclusive = true): boolean {
         const point = new Vec3(p);
+        const min = this.min;
+        const max = this.max;
         const px = point.x;
         const py = point.y;
         const pz = point.z;
         if (inclusive) {
             return (
-                px >= this._min.x &&
-                px <= this._max.x &&
-                py >= this._min.y &&
-                py <= this._max.y &&
-                pz >= this._min.z &&
-                pz <= this._max.z
+                px >= min.x &&
+                px <= max.x &&
+                py >= min.y &&
+                py <= max.y &&
+                pz >= min.z &&
+                pz <= max.z
             );
         }
         return (
-            px > this._min.x &&
-            px < this._max.x &&
-            py > this._min.y &&
-            py < this._max.y &&
-            pz > this._min.z &&
-            pz < this._max.z
+            px > min.x &&
+            px < max.x &&
+            py > min.y &&
+            py < max.y &&
+            pz > min.z &&
+            pz < max.z
         );
     }
 
     /** True if `other` is wholly contained within this box. */
-    containsBox(other: BlockBoundingBoxLike, inclusive = true): boolean {
+    containsBox(other: BlockBoundingBox, inclusive = true): boolean {
         const o = AABB.from(other);
         return (
             this.containsPoint(o.min, inclusive) &&
@@ -381,42 +409,86 @@ export class AABB implements BlockBoundingBoxLike {
     /** Smallest vector to move point into the box (zero if already inside). */
     clampPoint(p: Vec3Like): Vec3 {
         const point = new Vec3(p);
+        const min = this.min;
+        const max = this.max;
         return new Vec3(
-            clamp(point.x, this._min.x, this._max.x),
-            clamp(point.y, this._min.y, this._max.y),
-            clamp(point.z, this._min.z, this._max.z),
+            clamp(point.x, min.x, max.x),
+            clamp(point.y, min.y, max.y),
+            clamp(point.z, min.z, max.z),
         );
     }
 
     /** Compare with epsilon tolerance on all coordinates. */
-    equals(other: BlockBoundingBoxLike, epsilon = EPSILON): boolean {
+    equals(other: BlockBoundingBox, epsilon = EPSILON): boolean {
         const o = AABB.from(other);
+        const min = this.min;
+        const max = this.max;
         return (
-            Math.abs(this._min.x - o.min.x) <= epsilon &&
-            Math.abs(this._min.y - o.min.y) <= epsilon &&
-            Math.abs(this._min.z - o.min.z) <= epsilon &&
-            Math.abs(this._max.x - o.max.x) <= epsilon &&
-            Math.abs(this._max.y - o.max.y) <= epsilon &&
-            Math.abs(this._max.z - o.max.z) <= epsilon
+            Math.abs(min.x - o.min.x) <= epsilon &&
+            Math.abs(min.y - o.min.y) <= epsilon &&
+            Math.abs(min.z - o.min.z) <= epsilon &&
+            Math.abs(max.x - o.max.x) <= epsilon &&
+            Math.abs(max.y - o.max.y) <= epsilon &&
+            Math.abs(max.z - o.max.z) <= epsilon
         );
     }
 
     /**
-     * Return a plain object with `{ min, max }` where min/max are plain `{x,y,z}`.
-     * Useful when passing to APIs that read a structural BlockBoundingBox.
+     * Return a plain mutable object with Bedrock-compatible
+     * `{ center, extent }`.
      */
-    toObject(): BlockBoundingBoxLike {
-        return { min: this._min.toObject(), max: this._max.toObject() };
+    toObject(): MinecraftAABB {
+        return {
+            center: this._center.toObject(),
+            extent: this._extent.toObject(),
+        };
+    }
+
+    /**
+     * Return a plain object with `{ min, max }` where min/max are plain
+     * `{x,y,z}`.
+     */
+    toBlockBoundingBox(): BlockBoundingBox {
+        return { min: this.min.toObject(), max: this.max.toObject() };
     }
 
     toString(): string {
-        return `AABB(min=${this._min.toString({ decimals: 3 })}, max=${this._max.toString({ decimals: 3 })})`;
+        return `AABB(center=${this._center.toString({ decimals: 3 })}, extent=${this._extent.toString({ decimals: 3 })})`;
     }
 
-    /** Structural conversion. Accepts AABB or `{ min, max }`. */
+    /** Structural conversion. Accepts AABB, `{ center, extent }`, or `{ min, max }`. */
     static from(box: AABBInput): AABB {
         if (box instanceof AABB) return box;
+        if (isAABBShapeLike(box)) return new AABB(box);
         return new AABB(box);
+    }
+
+    private static normalizeExtent(extent: Vec3Like): Vec3 {
+        const value = new Vec3(extent);
+        return new Vec3(
+            Math.abs(value.x),
+            Math.abs(value.y),
+            Math.abs(value.z),
+        );
+    }
+
+    private static toCenterExtentFromMinMax(
+        a: Vec3,
+        b: Vec3,
+    ): { center: Vec3; extent: Vec3 } {
+        const normalized = AABB.normalizeMinMax(a, b);
+        return {
+            center: new Vec3(
+                (normalized.min.x + normalized.max.x) * 0.5,
+                (normalized.min.y + normalized.max.y) * 0.5,
+                (normalized.min.z + normalized.max.z) * 0.5,
+            ),
+            extent: new Vec3(
+                (normalized.max.x - normalized.min.x) * 0.5,
+                (normalized.max.y - normalized.min.y) * 0.5,
+                (normalized.max.z - normalized.min.z) * 0.5,
+            ),
+        };
     }
 
     private static normalizeMinMax(a: Vec3, b: Vec3): { min: Vec3; max: Vec3 } {
@@ -434,23 +506,30 @@ export class AABB implements BlockBoundingBoxLike {
     }
 }
 
-function isBlockBoundingBoxLike(v: unknown): v is BlockBoundingBoxLike {
+function isBlockBoundingBoxLike(v: unknown): v is BlockBoundingBox {
     if (!v || typeof v !== "object") return false;
     const b = v as Record<string, unknown>;
     return isVec3Like(b.min) && isVec3Like(b.max);
 }
 
-/**
- * Returns true when a value is an AABB instance or a structural `{ min, max }` box.
- */
-export function isAABBLike(v: unknown): v is AABBInput {
-    if (v instanceof AABB) return true;
-    return isBlockBoundingBoxLike(v);
+function isAABBShapeLike(v: unknown): v is MinecraftAABB {
+    if (!v || typeof v !== "object") return false;
+    const box = v as Record<string, unknown>;
+    return isVec3Like(box.center) && isVec3Like(box.extent);
 }
 
 /**
- * Convert any structural `{ min, max }` box into an AABB instance.
- * Returns the same instance when already an AABB.
+ * Returns true when a value is an AABB instance or a structural
+ * `{ center, extent }` box.
+ */
+export function isAABBLike(v: unknown): v is AABB | MinecraftAABB {
+    if (v instanceof AABB) return true;
+    return isAABBShapeLike(v);
+}
+
+/**
+ * Convert a Bedrock-style `{ center, extent }` or `{ min, max }` box into an
+ * AABB instance. Returns the same instance when already an AABB.
  */
 export function toAABB(box: AABBInput): AABB {
     return AABB.from(box);

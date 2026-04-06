@@ -146,6 +146,20 @@ export type ServiceOptions = {
 };
 
 /**
+ * Options for creating a child scope from a context.
+ */
+export type CreateScopeOptions = {
+    inheritServices?: ServiceInheritancePolicy;
+};
+
+/**
+ * Options for deleting a service from a context.
+ */
+export type DeleteServiceOptions = {
+    dispose?: boolean;
+};
+
+/**
  * Create a typed service key for storing/retrieving values on a Context.
  */
 export function createServiceKey<T>(description?: string): ServiceKey<T> {
@@ -465,9 +479,7 @@ export class Context {
      * Create a child scope that groups timers/subscriptions/resources.
      * Disposing the scope tears down its resources; stage disposal also disposes the scope.
      */
-    createScope(options?: {
-        inheritServices?: ServiceInheritancePolicy;
-    }): Context {
+    createScope(options?: CreateScopeOptions): Context {
         const child = new Context(this);
         if (options && typeof options.inheritServices !== "undefined") {
             child.#inheritServices = options.inheritServices;
@@ -558,10 +570,7 @@ export class Context {
     /**
      * Remove a service; if it was auto-managed, dispose it first.
      */
-    deleteService(
-        key: ServiceLookupKey,
-        options?: { dispose?: boolean },
-    ): void {
+    deleteService(key: ServiceLookupKey, options?: DeleteServiceOptions): void {
         this.assertAllowed("deleteService");
         const entry = this.#services.get(key);
         if (!entry) return;

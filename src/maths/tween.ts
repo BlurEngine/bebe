@@ -1,4 +1,4 @@
-import type { RunHandler } from "../context.js";
+import type { RunHandler } from "@blurengine/bebe";
 import { clamp, lerp } from "./util.js";
 import { Vec3, type Vec3Init, type Vec3Like } from "./vec3.js";
 

@@ -180,8 +180,16 @@ export class Vec3 {
         );
     }
 
+    magnitudeSquared(): number {
+        return this._x * this._x + this._y * this._y + this._z * this._z;
+    }
+
     distance(v: Vec3Like): number {
         return this.subtract(v).magnitude();
+    }
+
+    distanceSquared(v: Vec3Like): number {
+        return this.subtract(v).magnitudeSquared();
     }
 
     normalize(): Vec3 {

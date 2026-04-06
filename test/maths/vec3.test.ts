@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Vec3, isVec3Like } from "../../src/maths/vec3.js";
+import { Vec3, isVec3Like } from "@blurengine/bebe/maths";
 
 describe("maths/Vec3", () => {
     it("constructs from supported input shapes, parses strings explicitly, and exposes direction helpers", () => {
@@ -38,7 +38,10 @@ describe("maths/Vec3", () => {
             y: 0,
             z: 1,
         });
+        expect(new Vec3(3, 4, 0).magnitudeSquared()).toBe(25);
         expect(new Vec3(3, 4, 0).magnitude()).toBe(5);
+        expect(new Vec3(0, 0, 0).distanceSquared([1, 2, 2])).toBe(9);
+        expect(new Vec3(0, 0, 0).distance([1, 2, 2])).toBe(3);
         expect(new Vec3(3, 4, 0).normalize().toObject()).toEqual({
             x: 0.6,
             y: 0.8,

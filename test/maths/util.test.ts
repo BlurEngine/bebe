@@ -8,15 +8,11 @@ import {
     chooseWeighted,
     clamp,
     directionToYawPitch,
-    distance3,
-    distanceSquared3,
     formatFixedTrim,
     forwardRightUp,
     frac,
     invLerp,
     isMovingVelocity,
-    length3,
-    lengthSquared3,
     lerp,
     normalizeSafe3,
     quantize,
@@ -32,10 +28,11 @@ import {
     snapToGrid3,
     toBlockPos,
     toRadians,
+    Vec3,
     wrapAngle180,
     wrapAngle360,
     yawPitchToDirection,
-} from "../../src/maths/util.js";
+} from "@blurengine/bebe/maths";
 
 afterEach(() => {
     vi.restoreAllMocks();
@@ -85,13 +82,14 @@ describe("maths/util", () => {
     it("covers vector-shaped helpers", () => {
         const normalized = normalizeSafe3({ x: 3, y: 0, z: 4 });
         const basis = forwardRightUp(45, 0);
+        const distanceVec = new Vec3({ x: 3, y: 4, z: 12 });
+        const origin = new Vec3({ x: 0, y: 0, z: 0 });
+        const target = new Vec3({ x: 1, y: 2, z: 2 });
 
-        expect(lengthSquared3({ x: 3, y: 4, z: 12 })).toBe(169);
-        expect(length3({ x: 3, y: 4, z: 12 })).toBe(13);
-        expect(
-            distanceSquared3({ x: 0, y: 0, z: 0 }, { x: 1, y: 2, z: 2 }),
-        ).toBe(9);
-        expect(distance3({ x: 0, y: 0, z: 0 }, { x: 1, y: 2, z: 2 })).toBe(3);
+        expect(distanceVec.magnitudeSquared()).toBe(169);
+        expect(distanceVec.magnitude()).toBe(13);
+        expect(origin.distanceSquared(target)).toBe(9);
+        expect(origin.distance(target)).toBe(3);
         expect(normalized.x).toBeCloseTo(0.6);
         expect(normalized.y).toBeCloseTo(0);
         expect(normalized.z).toBeCloseTo(0.8);

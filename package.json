@@ -26,6 +26,10 @@
       "import": "./lib/index.js",
       "types": "./lib/types/bebe-public.d.ts"
     },
+    "./bedrock": {
+      "import": "./lib/bedrock/index.js",
+      "types": "./lib/types/bebe-public.d.ts"
+    },
     "./maths": {
       "import": "./lib/maths/index.js",
       "types": "./lib/types/bebe-public.d.ts"
@@ -48,7 +52,8 @@
     "CHANGELOG.md",
     "LICENSE",
     "NOTICE",
-    "lib"
+    "lib",
+    "src"
   ],
   "scripts": {
     "clean": "node ./scripts/clean.mjs",
