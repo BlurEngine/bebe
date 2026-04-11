@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0
+
+### Minor Changes
+
+- [`55ed6f9`](https://github.com/BlurEngine/bebe/commit/55ed6f988c5a8bb3601f72e50f4ec64cf79a3983) Thanks [@SupaHam](https://github.com/SupaHam)! - Add context-owned stagger helpers plus new `@blurengine/bebe/bedrock` and voxel maths.
+
 ## 0.2.0
 
 ### Minor Changes
