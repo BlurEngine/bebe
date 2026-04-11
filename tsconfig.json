@@ -16,12 +16,14 @@
     "declarationDir": "temp/types",
     "declarationMap": true,
     "sourceMap": true,
-    "module": "node16",
-    "moduleResolution": "node16",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "resolveJsonModule": true,
     "lib": ["ES2023", "DOM"],
     "paths": {
       "@blurengine/bebe": ["./src/index.ts"],
       "@blurengine/bebe/bedrock": ["./src/bedrock/index.ts"],
+      "@blurengine/bebe/catalog": ["./src/catalog/index.ts"],
       "@blurengine/bebe/maths": ["./src/maths/index.ts"]
     }
   }

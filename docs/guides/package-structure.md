@@ -15,10 +15,11 @@ Use it when you are choosing imports, navigating the codebase, or deciding where
 
 ## Core Model
 
-`bebe` has three public package surfaces today:
+`bebe` has four public package surfaces today:
 
 - `@blurengine/bebe`
 - `@blurengine/bebe/bedrock`
+- `@blurengine/bebe/catalog`
 - `@blurengine/bebe/maths`
 
 The root package stays focused on lifecycle and runtime ownership.
@@ -29,6 +30,13 @@ The Bedrock subpath holds:
 - block mutation helpers
 - slot and item helpers
 - durability helpers
+
+The catalog subpath holds:
+
+- immutable block catalogs
+- structured tag queries
+- overlay helpers
+- the built-in vanilla block preset
 
 The maths subpath holds:
 
@@ -49,12 +57,14 @@ The public authored entrypoints are:
 
 - [src/index.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/index.ts)
 - [src/context.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/context.ts)
+- [src/catalog/index.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/catalog/index.ts)
 - [src/maths/index.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/maths/index.ts)
 
 As a consumer, the important import paths are:
 
 - `@blurengine/bebe`
 - `@blurengine/bebe/bedrock`
+- `@blurengine/bebe/catalog`
 - `@blurengine/bebe/maths`
 
 ### `src/`
@@ -66,6 +76,7 @@ Current top-level authored areas:
 - [src/context.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/context.ts) for lifecycle ownership
 - [src/stagger.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/stagger.ts) for staged owned work
 - [`src/bedrock/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/bedrock) for Bedrock API edge helpers
+- [`src/catalog/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/catalog) for block catalogs and vanilla block categories
 - [`src/maths/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/maths) for the maths surface, including voxel/grid helpers
 - [`src/test-support/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/test-support) for test-only helpers
 
@@ -106,6 +117,7 @@ It is the package build result, not the authored source of truth.
 
 - lifecycle and runtime ownership -> `@blurengine/bebe`
 - Bedrock API edge helpers -> `@blurengine/bebe/bedrock`
+- immutable block catalogs and the vanilla block preset -> `@blurengine/bebe/catalog`
 - vectors, facings, AABBs, voxel/grid helpers, tweens, and numeric helpers -> `@blurengine/bebe/maths`
 
 Consumers should import from the public package entrypoints, not from `src/` or `lib/`.
@@ -114,6 +126,7 @@ Consumers should import from the public package entrypoints, not from `src/` or 
 
 - new lifecycle or runtime ownership primitive -> root package surface
 - new Bedrock edge helper -> `src/bedrock/`
+- new block catalog or generated vanilla block category data -> `src/catalog/`
 - new maths primitive, voxel/grid helper, or traversal helper -> `src/maths/`
 - tests -> `test/`
 - reader-facing usage and behaviour docs -> `docs/guides/`

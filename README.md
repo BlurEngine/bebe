@@ -8,6 +8,7 @@ Game engine library for Minecraft Bedrock scripting.
 
 - `@blurengine/bebe`: engine lifecycle, ownership, and runtime scheduling primitives
 - `@blurengine/bebe/bedrock`: Bedrock edge helpers for block, slot, item, and durability work
+- `@blurengine/bebe/catalog`: immutable block catalogs plus the built-in vanilla preset
 - `@blurengine/bebe/maths`: vectors, facings, AABBs, voxel/grid helpers, tweens, and numeric helpers
 - `npm install @blurengine/bebe @minecraft/server`
 
@@ -35,6 +36,7 @@ tweenNumber(ctx, {
 - Keep timers, subscriptions, spawned child scopes, and other runtime work owned by one `Context`.
 - Provide small runtime helpers for staging owned work over ticks.
 - Keep Bedrock-specific friction at the edge through reusable helpers instead of repeating the same safety and fallback code inside gameplay features.
+- Provide an opt-in block catalog surface so Bedrock features can query curated vanilla block categories without carrying giant local tables.
 - Provide a separate maths surface for vector, facing, AABB, voxel/grid, tween, and scalar helpers without making the root package feel overloaded.
 
 ## Documentation
@@ -43,6 +45,7 @@ tweenNumber(ctx, {
 - [Context Guide](./docs/guides/context.md)
 - [Stagger Guide](./docs/guides/stagger.md)
 - [Bedrock Guide](./docs/guides/bedrock.md)
+- [Catalog Guide](./docs/guides/catalog.md)
 - [Maths Guide](./docs/guides/maths.md)
 - [Voxels Guide](./docs/guides/voxels.md)
 - [Changelog](./CHANGELOG.md)

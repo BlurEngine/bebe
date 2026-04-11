@@ -4,3 +4,4 @@ lib/
 temp/
 coverage/
 *.log
+src/catalog/generated/vanilla-block-catalog.data.json

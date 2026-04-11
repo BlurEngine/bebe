@@ -3,6 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import * as bebe from "@blurengine/bebe";
 import * as bedrock from "@blurengine/bebe/bedrock";
+import * as catalog from "@blurengine/bebe/catalog";
 import {
     Context,
     ROOT_CONTEXT,
@@ -65,7 +66,27 @@ describe("package root exports", () => {
         );
     });
 
-    it("declares the root, bedrock, and maths exports", () => {
+    it("exposes the catalog subpath", () => {
+        expect(Object.keys(catalog).sort()).toEqual(
+            [
+                "BlockCatalog",
+                "createBlockCatalog",
+                "extendBlockCatalog",
+                "getCatalogFamilyTag",
+                "getCatalogFamilyTags",
+                "getFamilyTag",
+                "getFamilyTags",
+                "getTagWithPrefix",
+                "getTagsWithPrefix",
+                "queryCatalogFamily",
+                "queryFamily",
+                "vanillaBlockCatalog",
+                "vanillaBlockCatalogEntries",
+            ].sort(),
+        );
+    });
+
+    it("declares the root, bedrock, maths, and catalog exports", () => {
         expect(packageJson.exports).toEqual({
             ".": {
                 import: "./lib/index.js",
@@ -77,6 +98,10 @@ describe("package root exports", () => {
             },
             "./maths": {
                 import: "./lib/maths/index.js",
+                types: "./lib/types/bebe-public.d.ts",
+            },
+            "./catalog": {
+                import: "./lib/catalog/index.js",
                 types: "./lib/types/bebe-public.d.ts",
             },
         });
