@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createBundle } from "dts-buddy";
 
@@ -33,7 +33,57 @@ await createBundle({
     compilerOptions: { stripInternal: true },
     modules,
 });
+rewriteBundleDeclarationMap(resolve(outDir, "bebe-public.d.ts"));
 
 console.log(
     `[generate-types] Built single types bundle at ${resolve(outDir, "bebe-public.d.ts")} from ${Object.keys(modules).length} module(s)`,
 );
+
+function rewriteBundleDeclarationMap(bundlePath) {
+    const bundleMapPath = `${bundlePath}.map`;
+    if (!fs.existsSync(bundleMapPath)) {
+        return;
+    }
+
+    const bundleMap = JSON.parse(fs.readFileSync(bundleMapPath, "utf-8"));
+    const rewrittenSources = [];
+    const rewrittenSourcesContent = [];
+
+    for (const sourcePath of bundleMap.sources ?? []) {
+        const tempDeclarationPath = resolve(outDir, sourcePath);
+        const tempDeclarationMapPath = `${tempDeclarationPath}.map`;
+        let finalSourcePath = tempDeclarationPath;
+        let finalSourceContent = null;
+
+        if (fs.existsSync(tempDeclarationMapPath)) {
+            const tempDeclarationMap = JSON.parse(
+                fs.readFileSync(tempDeclarationMapPath, "utf-8"),
+            );
+            const mappedSourcePath = tempDeclarationMap.sources?.[0];
+            if (mappedSourcePath) {
+                finalSourcePath = resolve(
+                    tempDeclarationPath,
+                    "..",
+                    mappedSourcePath,
+                );
+            }
+        }
+
+        if (fs.existsSync(finalSourcePath)) {
+            finalSourceContent = fs.readFileSync(finalSourcePath, "utf-8");
+        }
+
+        rewrittenSources.push(
+            relative(outDir, finalSourcePath).replaceAll("\\", "/"),
+        );
+        rewrittenSourcesContent.push(finalSourceContent);
+    }
+
+    bundleMap.sources = rewrittenSources;
+    bundleMap.sourcesContent = rewrittenSourcesContent;
+    fs.writeFileSync(
+        bundleMapPath,
+        `${JSON.stringify(bundleMap, null, "\t")}\n`,
+        "utf-8",
+    );
+}
