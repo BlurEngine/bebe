@@ -47,13 +47,11 @@ function rewriteBundleDeclarationMap(bundlePath) {
 
     const bundleMap = JSON.parse(fs.readFileSync(bundleMapPath, "utf-8"));
     const rewrittenSources = [];
-    const rewrittenSourcesContent = [];
 
     for (const sourcePath of bundleMap.sources ?? []) {
         const tempDeclarationPath = resolve(outDir, sourcePath);
         const tempDeclarationMapPath = `${tempDeclarationPath}.map`;
         let finalSourcePath = tempDeclarationPath;
-        let finalSourceContent = null;
 
         if (fs.existsSync(tempDeclarationMapPath)) {
             const tempDeclarationMap = JSON.parse(
@@ -69,18 +67,13 @@ function rewriteBundleDeclarationMap(bundlePath) {
             }
         }
 
-        if (fs.existsSync(finalSourcePath)) {
-            finalSourceContent = fs.readFileSync(finalSourcePath, "utf-8");
-        }
-
         rewrittenSources.push(
             relative(outDir, finalSourcePath).replaceAll("\\", "/"),
         );
-        rewrittenSourcesContent.push(finalSourceContent);
     }
 
     bundleMap.sources = rewrittenSources;
-    bundleMap.sourcesContent = rewrittenSourcesContent;
+    delete bundleMap.sourcesContent;
     fs.writeFileSync(
         bundleMapPath,
         `${JSON.stringify(bundleMap, null, "\t")}\n`,

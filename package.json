@@ -23,16 +23,16 @@
   ],
   "exports": {
     ".": {
-      "import": "./lib/index.js",
-      "types": "./lib/types/bebe-public.d.ts"
+      "types": "./lib/types/bebe-public.d.ts",
+      "default": "./lib/index.js"
     },
     "./bedrock": {
-      "import": "./lib/bedrock/index.js",
-      "types": "./lib/types/bebe-public.d.ts"
+      "types": "./lib/types/bebe-public.d.ts",
+      "default": "./lib/bedrock/index.js"
     },
     "./maths": {
-      "import": "./lib/maths/index.js",
-      "types": "./lib/types/bebe-public.d.ts"
+      "types": "./lib/types/bebe-public.d.ts",
+      "default": "./lib/maths/index.js"
     }
   },
   "type": "module",
@@ -52,8 +52,7 @@
     "CHANGELOG.md",
     "LICENSE",
     "NOTICE",
-    "lib",
-    "src"
+    "lib"
   ],
   "scripts": {
     "clean": "node ./scripts/clean.mjs",
