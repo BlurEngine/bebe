@@ -56,7 +56,8 @@
     "CHANGELOG.md",
     "LICENSE",
     "NOTICE",
-    "lib"
+    "lib",
+    "src"
   ],
   "scripts": {
     "clean": "node ./scripts/clean.mjs",
