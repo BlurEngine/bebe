@@ -16,7 +16,7 @@ import {
 
 const packageJsonPath = path.resolve(import.meta.dirname, "..", "package.json");
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
-    exports: Record<string, { import: string; types: string }>;
+    exports: Record<string, { default: string; types: string }>;
 };
 
 describe("package root exports", () => {
@@ -89,20 +89,20 @@ describe("package root exports", () => {
     it("declares the root, bedrock, maths, and catalog exports", () => {
         expect(packageJson.exports).toEqual({
             ".": {
-                import: "./lib/index.js",
                 types: "./lib/types/bebe-public.d.ts",
+                default: "./lib/index.js",
             },
             "./bedrock": {
-                import: "./lib/bedrock/index.js",
                 types: "./lib/types/bebe-public.d.ts",
+                default: "./lib/bedrock/index.js",
             },
             "./maths": {
-                import: "./lib/maths/index.js",
                 types: "./lib/types/bebe-public.d.ts",
+                default: "./lib/maths/index.js",
             },
             "./catalog": {
-                import: "./lib/catalog/index.js",
                 types: "./lib/types/bebe-public.d.ts",
+                default: "./lib/catalog/index.js",
             },
         });
     });
