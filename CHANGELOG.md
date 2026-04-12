@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0
+
+### Minor Changes
+
+- [`68f09fa`](https://github.com/BlurEngine/bebe/commit/68f09fa53407de05123c34cfe9457ecb4c2bb769) Thanks [@SupaHam](https://github.com/SupaHam)! - Add a new `@blurengine/bebe/catalog` surface with immutable block catalogs, generated vanilla block tags, and overlay-based catalog customization helpers.
+
 ## 0.3.0
 
 ### Minor Changes
