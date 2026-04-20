@@ -25,6 +25,15 @@ This file applies only to agents working in the `bebe/` repository.
 - Keep generic framework building blocks separate from Minecraft-specific catalogs. New trigger, monitor, or blueprint behavior should only become Bedrock-specific at the edge.
 - If Bedrock is missing an API and `bebe` fills the gap through polling or derived state, design that solution so consumers can reuse the same primitive to build their own higher-level features.
 - When naming similar capabilities, prefer one vocabulary and one implementation path. Avoid sibling APIs that solve the same problem with slightly different names or behavior.
+- When an edge helper delegates to a shared primitive, prefer keeping the shared primitive's result shape unless the edge helper truly changes the output semantics. Bedrock-specific behavior should usually live in inputs, callback context, or helper side effects rather than in a second mirrored result vocabulary.
+- Do not add a new exported type name when an existing exported type already expresses the same contract. A renamed alias is still duplicate vocabulary unless it gives users a real semantic boundary that improves understanding.
+- When one exported structure contains another collection that already fully determines it, collapse the design to one source of truth. Do not publish paired fields such as a map plus a set of the same keys unless they represent genuinely different concepts.
+- Query-backed collection types should have one clear identity. If a type primarily represents selected ids, locations, or entries, keep its main API centred on that collection meaning and treat projections such as grouped tags or derived entries as secondary views.
+- Preserve multiplicity in API design. If a concept is inherently plural, such as tags on a block, keep the first-class API plural and avoid singular convenience helpers unless the model has a real uniqueness invariant.
+- Prefer explicit names when the value domain is ambiguous. If ids, tags, and other inputs share the same primitive type such as `string`, avoid generic verbs like `has(...)` when a more specific name such as `hasId(...)` removes real confusion.
+- Do not force array-style methods onto non-array views by default. For lazy selections, set-like views, or query-backed collections, expose the collection operations that match the type's primary identity, then return plain arrays from explicit projection methods and let users use normal JavaScript from there.
+- When a helper is justified, generalise the underlying concept rather than today's narrow use case. Prefer a small common-case API plus one generic escape hatch, such as `prefix` plus `test(tag)`, over adding many one-off helpers that each hard-code a single naming pattern.
+- Use brief code comments to mark durable, non-obvious intent or relationships that would otherwise cost real time to re-derive. Do not narrate straightforward control flow or restate what the code already says clearly.
 - Use `Facing` as the engine term for the six block-adjacent offsets derived from Bedrock's `Direction` enum. Reserve `direction` for arbitrary vectors, look directions, or orientation math unless Bedrock interop requires the original name.
 - In maths APIs, prefer the class types (`Vec2`, `Vec3`, `AABB`) as the primary authored surface. Keep raw structural helpers only for Bedrock interop, scalar queries, and low-allocation edge work; do not mirror the full class algebra in util helpers.
 - Use named exported types instead of repeating anonymous structural shapes in public maths APIs when those shapes appear more than once.
@@ -35,6 +44,7 @@ This file applies only to agents working in the `bebe/` repository.
 - Match defensive wrappers to the documented API contract. Do not wrap Bedrock calls in `attemptBedrock` unless the docs or observed runtime behavior show that the call can throw in normal use.
 - Prefer Bedrock's mapped return types when they are already precise. Do not add redundant casts such as `as SomeComponent | undefined` for known `getComponent(...)` ids when the API already returns that type.
 - Do not add speculative defensiveness or semantic no-op code. Avoid redundant normalization such as `?? undefined`, identity wrappers, or extra helper layers unless they change real runtime behavior, remove repeated complexity, or establish a proven semantic boundary.
+- Reuse the shared maths vocabulary at the Bedrock edge when the accepted shape is the same. Do not introduce Bedrock-only location or collection types when `Vec3Like`, `VoxelFloodFillNode`, `VoxelSet`, or `VoxelMap` already describe the contract accurately.
 
 ## Public API And Docs Rules
 
@@ -57,5 +67,11 @@ This file applies only to agents working in the `bebe/` repository.
 
 - Did I add only proven API surface, or did I publish speculation that no real caller uses yet?
 - Did I justify each Bedrock wrapper and cast against the documented API contract?
+- Did I introduce any duplicated exported vocabulary for an existing shared primitive or shape?
+- Does any helper that delegates to a shared primitive return a genuinely different result, or did I just mirror the primitive's output under a new name?
+- Does any exported object carry fields that are fully derivable from another field already present?
+- Does each query-backed or collection-like type still have one clear identity, or did I blur it by adding methods that belong to a different abstraction?
+- Did I add a singular helper for a concept that is still fundamentally plural, without a real uniqueness invariant to justify it?
+- Did I add a narrow helper for one current naming pattern when a small generic matcher or filter would have produced a cleaner long-term API?
 - Did I keep public types, docs, tests, exports, and package metadata aligned?
 - Does `npm run check` need to pass for this change?

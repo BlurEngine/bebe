@@ -3,19 +3,11 @@ import {
     BlockCatalog,
     createBlockCatalog,
     extendBlockCatalog,
-    getCatalogFamilyTag,
-    getCatalogFamilyTags,
-    getFamilyTag,
-    getFamilyTags,
-    getTagWithPrefix,
-    getTagsWithPrefix,
-    queryCatalogFamily,
-    queryFamily,
     vanillaBlockCatalog,
 } from "@blurengine/bebe/catalog";
 
 describe("block catalog", () => {
-    it("supports structured tag queries", () => {
+    it("supports structured tag queries with oneOf groups", () => {
         const catalog = createBlockCatalog([
             { id: "minecraft:oak_log", tags: ["family:oak", "kind:log"] },
             { id: "minecraft:oak_leaves", tags: ["family:oak", "kind:leaf"] },
@@ -29,12 +21,133 @@ describe("block catalog", () => {
         expect(
             catalog.queryIds({
                 all: ["family:oak"],
-                any: ["kind:leaf", "kind:log"],
+                oneOf: [["kind:leaf", "kind:log"]],
             }),
         ).toEqual(["minecraft:oak_leaves", "minecraft:oak_log"]);
         expect(
             catalog.queryIds({ all: ["kind:log"], none: ["family:oak"] }),
         ).toEqual(["minecraft:birch_log"]);
+        expect(
+            catalog.queryIds({
+                oneOf: [["family:oak", "family:birch"], ["kind:leaf"]],
+            }),
+        ).toEqual(["minecraft:oak_leaves"]);
+    });
+
+    it("provides immutable catalog-bound selections", () => {
+        const catalog = createBlockCatalog([
+            { id: "minecraft:oak_log", tags: ["family:oak", "kind:log"] },
+            {
+                id: "minecraft:oak_leaves",
+                tags: ["family:oak", "kind:leaf"],
+            },
+            {
+                id: "minecraft:azalea_leaves",
+                tags: ["family:azalea", "kind:flower", "kind:leaf"],
+            },
+            {
+                id: "minecraft:cut_copper",
+                tags: ["family:copper", "family:cut_copper"],
+            },
+        ]);
+
+        const treeLogs = catalog.select({
+            oneOf: [["kind:log", "kind:wood"], []],
+        });
+        const oakTreeLogs = treeLogs.refine({
+            all: ["family:oak", "family:oak"],
+            oneOf: [[], ["family:oak", "family:azalea"]],
+            none: ["feature:education", "feature:education"],
+        });
+
+        expect(typeof treeLogs.refine).toBe("function");
+        expect(treeLogs.toQuery()).toEqual({
+            oneOf: [["kind:log", "kind:wood"]],
+        });
+        expect(oakTreeLogs.toQuery()).toEqual({
+            all: ["family:oak"],
+            oneOf: [
+                ["kind:log", "kind:wood"],
+                ["family:oak", "family:azalea"],
+            ],
+            none: ["feature:education"],
+        });
+        expect(treeLogs.size).toBe(1);
+        expect(treeLogs.ids()).toEqual(["minecraft:oak_log"]);
+        expect(treeLogs.hasId("minecraft:oak_log")).toBe(true);
+        expect(treeLogs.hasId("minecraft:oak_leaves")).toBe(false);
+        expect(treeLogs.hasId(undefined)).toBe(false);
+        expect([...treeLogs.idSet()]).toEqual(["minecraft:oak_log"]);
+        expect(treeLogs.entries().map((entry) => entry.id)).toEqual([
+            "minecraft:oak_log",
+        ]);
+
+        const treeCanopy = catalog.select({
+            oneOf: [["kind:leaf"]],
+        });
+
+        expect(treeCanopy.ids()).toEqual([
+            "minecraft:azalea_leaves",
+            "minecraft:oak_leaves",
+        ]);
+        expect(treeCanopy.size).toBe(2);
+        expect(treeCanopy.tags({ prefix: "family:" })).toEqual([
+            "family:azalea",
+            "family:oak",
+        ]);
+        expect([...treeCanopy.groupIdsByTag({ prefix: "family:" })]).toEqual([
+            ["family:azalea", ["minecraft:azalea_leaves"]],
+            ["family:oak", ["minecraft:oak_leaves"]],
+        ]);
+        expect(
+            treeCanopy.tags({
+                prefix: "family:",
+                test: (tag) => tag.endsWith("oak"),
+            }),
+        ).toEqual(["family:oak"]);
+        expect([
+            ...treeCanopy.groupIdsByTag({
+                test: (tag) => tag === "family:azalea",
+            }),
+        ]).toEqual([["family:azalea", ["minecraft:azalea_leaves"]]]);
+        expect(
+            treeCanopy
+                .groupSelectionsByTag({ prefix: "family:" })
+                .get("family:oak")
+                ?.ids(),
+        ).toEqual(["minecraft:oak_leaves"]);
+        expect(
+            treeCanopy
+                .groupSelectionsByTag({ prefix: "family:" })
+                .get("family:azalea")
+                ?.ids(),
+        ).toEqual(["minecraft:azalea_leaves"]);
+    });
+
+    it("keeps generic tag filters on catalog instances", () => {
+        const catalog = createBlockCatalog([
+            { id: "minecraft:oak_log", tags: ["family:oak", "kind:log"] },
+            {
+                id: "minecraft:cut_copper",
+                tags: ["family:copper", "family:cut_copper"],
+            },
+        ]);
+
+        expect(
+            catalog.getTags("minecraft:cut_copper", { prefix: "family:" }),
+        ).toEqual(["family:copper", "family:cut_copper"]);
+        expect(
+            catalog.getTags("minecraft:oak_log", { prefix: "family:" }),
+        ).toEqual(["family:oak"]);
+        expect(catalog.getTags(undefined)).toEqual([]);
+        expect(catalog.has(undefined, "family:oak")).toBe(false);
+        expect(catalog.hasEntry(undefined)).toBe(false);
+        expect(catalog.getEntry(undefined)).toBeUndefined();
+        expect(
+            catalog.getTags("minecraft:cut_copper", {
+                test: (tag) => tag.endsWith("cut_copper"),
+            }),
+        ).toEqual(["family:cut_copper"]);
     });
 
     it("supports immutable overlays without mutating the base catalog", () => {
@@ -72,42 +185,24 @@ describe("block catalog", () => {
         ]);
     });
 
-    it("exposes family helpers on both the generic and vanilla preset surfaces", () => {
+    it("exposes generic tag filters and selections on the vanilla preset surface", () => {
         expect(
-            getTagsWithPrefix(
-                vanillaBlockCatalog,
-                "minecraft:cut_copper",
-                "family:",
-            ),
+            vanillaBlockCatalog.getTags("minecraft:cut_copper", {
+                prefix: "family:",
+            }),
         ).toEqual(["family:copper", "family:cut_copper"]);
         expect(
-            getTagWithPrefix(
-                vanillaBlockCatalog,
-                "minecraft:oak_log",
-                "family:",
-            ),
-        ).toBe("family:oak");
-        expect(
-            getCatalogFamilyTags(vanillaBlockCatalog, "minecraft:cut_copper"),
-        ).toEqual(["family:copper", "family:cut_copper"]);
-        expect(
-            getCatalogFamilyTag(vanillaBlockCatalog, "minecraft:oak_log"),
-        ).toBe("family:oak");
-        expect(getFamilyTags("minecraft:cut_copper")).toEqual([
-            "family:copper",
-            "family:cut_copper",
-        ]);
-        expect(getFamilyTag("minecraft:oak_log")).toBe("family:oak");
-        expect(
-            queryCatalogFamily(vanillaBlockCatalog, "family:oak").some(
-                (entry) => entry.id === "minecraft:oak_leaves",
-            ),
-        ).toBe(true);
-        expect(
-            queryFamily("family:oak").some(
-                (entry) => entry.id === "minecraft:oak_leaves",
-            ),
-        ).toBe(true);
+            vanillaBlockCatalog.getTags("minecraft:oak_log", {
+                prefix: "family:",
+            }),
+        ).toEqual(["family:oak"]);
+
+        const oakSelection = vanillaBlockCatalog.select({
+            all: ["family:oak"],
+        });
+
+        expect(oakSelection.ids()).toContain("minecraft:oak_leaves");
+        expect(oakSelection.tags({ prefix: "kind:" })).toContain("kind:log");
     });
 
     it("ships inferred vanilla kind, family, color, and exact-override tags", () => {

@@ -22,7 +22,7 @@ These are the canonical guides for `@blurengine/bebe` and its public subpaths.
 - Read Bedrock Guide when you want the engine to absorb API friction at the Bedrock edge.
 - Read Catalog Guide when you want immutable block categories, vanilla block tags, or overlay-driven catalog customization.
 - Start with the Maths Guide if you are working with vectors, facings, AABBs, voxel/grid helpers, tweens, or numeric helpers.
-- Read Voxels Guide when you need keyed voxel positions, neighbourhoods, or flood-fill traversal.
+- Read Voxels Guide when you need voxel collections, neighbourhoods, stable keys, or flood-fill traversal.
 - Read Engine Philosophy if you are deciding whether a new feature fits the current direction of `bebe`.
 - Read Package Structure if you are choosing imports or navigating the repo.
 

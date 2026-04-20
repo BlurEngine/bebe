@@ -12,6 +12,7 @@ import {
     VERTICAL_FACING_OFFSETS,
     createFacingVoxelOffsets,
     createSurroundingOffsets,
+    floodFillVoxelSet,
     floodFillVoxels,
     getVoxelKey,
     parseVoxelKey,
@@ -34,6 +35,7 @@ describe("maths barrel exports", () => {
         expect(maths.VERTICAL_FACING_OFFSETS).toBe(VERTICAL_FACING_OFFSETS);
         expect(maths.createFacingVoxelOffsets).toBe(createFacingVoxelOffsets);
         expect(maths.createSurroundingOffsets).toBe(createSurroundingOffsets);
+        expect(maths.floodFillVoxelSet).toBe(floodFillVoxelSet);
         expect(maths.floodFillVoxels).toBe(floodFillVoxels);
         expect(maths.getVoxelKey).toBe(getVoxelKey);
         expect(maths.parseVoxelKey).toBe(parseVoxelKey);

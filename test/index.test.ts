@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import * as bebe from "@blurengine/bebe";
 import * as bedrock from "@blurengine/bebe/bedrock";
 import * as catalog from "@blurengine/bebe/catalog";
+import * as maths from "@blurengine/bebe/maths";
 import {
     Context,
     ROOT_CONTEXT,
@@ -11,6 +12,7 @@ import {
     createServiceKey,
     isRootContext,
     stagger,
+    staggerByGroup,
     staggerGroups,
 } from "@blurengine/bebe";
 
@@ -31,6 +33,7 @@ describe("package root exports", () => {
                 "isValidContext",
                 "mustContext",
                 "stagger",
+                "staggerByGroup",
                 "staggerGroups",
             ].sort(),
         );
@@ -43,6 +46,7 @@ describe("package root exports", () => {
         expect(bebe.createServiceKey).toBe(createServiceKey);
         expect(bebe.isRootContext).toBe(isRootContext);
         expect(bebe.stagger).toBe(stagger);
+        expect(bebe.staggerByGroup).toBe(staggerByGroup);
         expect(bebe.staggerGroups).toBe(staggerGroups);
     });
 
@@ -53,7 +57,10 @@ describe("package root exports", () => {
                 "applyDurabilityToSelectedSlot",
                 "applyDurabilityToSlot",
                 "attemptBedrock",
+                "collectAdjacentBlocks",
                 "destroyBlockAt",
+                "findAdjacentBlock",
+                "floodFillBlocks",
                 "getBlockAt",
                 "getBlockTypeId",
                 "getRemainingItemUses",
@@ -62,6 +69,7 @@ describe("package root exports", () => {
                 "isAirBlock",
                 "isLiquidBlock",
                 "setBlockTypeAt",
+                "someAdjacentBlock",
             ].sort(),
         );
     });
@@ -72,18 +80,17 @@ describe("package root exports", () => {
                 "BlockCatalog",
                 "createBlockCatalog",
                 "extendBlockCatalog",
-                "getCatalogFamilyTag",
-                "getCatalogFamilyTags",
-                "getFamilyTag",
-                "getFamilyTags",
-                "getTagWithPrefix",
-                "getTagsWithPrefix",
-                "queryCatalogFamily",
-                "queryFamily",
                 "vanillaBlockCatalog",
                 "vanillaBlockCatalogEntries",
             ].sort(),
         );
+    });
+
+    it("exposes the maths subpath", () => {
+        expect(maths.VoxelMap).toBeDefined();
+        expect(maths.VoxelSet).toBeDefined();
+        expect(maths.floodFillVoxelSet).toBeDefined();
+        expect(maths.floodFillVoxels).toBeDefined();
     });
 
     it("declares the root, bedrock, maths, and catalog exports", () => {

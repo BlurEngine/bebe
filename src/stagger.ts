@@ -83,6 +83,11 @@ export type StaggerOptions<T> = StaggerCommonOptions<T> & {
 };
 
 /**
+ * Stable key used to derive stagger groups from one flat item list.
+ */
+export type StaggerGroupKey = number | string;
+
+/**
  * Staggers multiple groups of items while preserving group boundaries.
  */
 export type StaggerGroupsOptions<T> = StaggerCommonOptions<T> & {
@@ -95,6 +100,35 @@ export type StaggerGroupsOptions<T> = StaggerCommonOptions<T> & {
     /**
      * Ticks to wait between the start of one group and the start of the next
      * group after the previous group's final batch. Default: 1.
+     */
+    ticksBetweenGroups?: number;
+};
+
+/**
+ * Staggers one list of items while deriving group boundaries from a key.
+ */
+export type StaggerByGroupOptions<
+    T,
+    TKey extends StaggerGroupKey = StaggerGroupKey,
+> = StaggerCommonOptions<T> & {
+    /**
+     * Comparator used to sort derived group keys before scheduling begins.
+     *
+     * Default: numeric ascending for number keys and locale order for string
+     * keys.
+     */
+    compareGroups?: (left: TKey, right: TKey) => number;
+    /**
+     * Returns the group key for one item.
+     */
+    groupBy: (item: T) => TKey;
+    /**
+     * Items to schedule after grouping.
+     */
+    items: readonly T[];
+    /**
+     * Ticks to wait between the start of one derived group and the start of the
+     * next derived group after the previous group's final batch. Default: 1.
      */
     ticksBetweenGroups?: number;
 };
@@ -123,6 +157,32 @@ export function stagger<T>(
     return staggerGroups(ctx, {
         ...options,
         groups: [options.items],
+    });
+}
+
+/**
+ * Staggers one list of items while deriving group boundaries from a group key.
+ *
+ * Use this when authored code already has one flat list, but the schedule still
+ * needs stable group spacing such as wave depth, stage number, or priority
+ * phase.
+ */
+export function staggerByGroup<
+    T,
+    TKey extends StaggerGroupKey = StaggerGroupKey,
+>(ctx: Context, options: StaggerByGroupOptions<T, TKey>): () => void {
+    const {
+        compareGroups,
+        groupBy,
+        items,
+        ticksBetweenGroups,
+        ...staggerOptions
+    } = options;
+
+    return staggerGroups(ctx, {
+        ...staggerOptions,
+        groups: createDerivedGroups(items, groupBy, compareGroups),
+        ticksBetweenGroups,
     });
 }
 
@@ -231,6 +291,41 @@ function createStaggerPlan<T>(
     return plan;
 }
 
+function createDerivedGroups<T, TKey extends StaggerGroupKey>(
+    items: readonly T[],
+    groupBy: (item: T) => TKey,
+    compareGroups: ((left: TKey, right: TKey) => number) | undefined,
+): readonly (readonly T[])[] {
+    const itemsByKey = new Map<TKey, T[]>();
+
+    for (const item of items) {
+        const key = groupBy(item);
+        const existing = itemsByKey.get(key);
+        if (existing) {
+            existing.push(item);
+            continue;
+        }
+
+        itemsByKey.set(key, [item]);
+    }
+
+    const sortedKeys = [...itemsByKey.keys()].sort(
+        compareGroups ?? compareGroupKeys,
+    );
+    const groups: T[][] = [];
+
+    for (const key of sortedKeys) {
+        const group = itemsByKey.get(key);
+        if (!group) {
+            continue;
+        }
+
+        groups.push(group);
+    }
+
+    return groups;
+}
+
 function applyOrder<T>(
     items: readonly T[],
     order: StaggerOrder<T> | undefined,
@@ -250,4 +345,15 @@ function chunkItems<T>(items: readonly T[], chunkSize: number): T[][] {
     }
 
     return chunks;
+}
+
+function compareGroupKeys(
+    left: StaggerGroupKey,
+    right: StaggerGroupKey,
+): number {
+    if (typeof left === "number" && typeof right === "number") {
+        return left - right;
+    }
+
+    return String(left).localeCompare(String(right));
 }

@@ -21,6 +21,7 @@ cancel scheduled work automatically when that context is disposed.
 The stagger model has two pieces:
 
 - `stagger(...)` stages one logical group of items
+- `staggerByGroup(...)` derives groups from one flat item list
 - `staggerGroups(...)` stages several groups while preserving group boundaries
 
 Both helpers schedule work under a `Context`.
@@ -50,6 +51,17 @@ This is a good fit for staged effects such as:
 - structural collapse waves
 - grouped spawns
 - multi-step visual effects
+
+### `staggerByGroup(...)`
+
+`staggerByGroup(...)` sits between the other two helpers.
+
+Use it when:
+
+- authored code already has one flat item list
+- group boundaries should be derived from a key such as wave depth, stage, or
+  priority
+- you want group spacing without building grouped arrays manually first
 
 ### Ordering
 
@@ -83,6 +95,7 @@ The most important fields are:
 ## Choosing The Right API
 
 - stage one list of owned work -> `stagger(...)`
+- stage one flat list with derived group keys -> `staggerByGroup(...)`
 - stage several ordered groups of owned work -> `staggerGroups(...)`
 
 If work does not need ownership or progressive scheduling, it probably does not

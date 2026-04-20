@@ -9,7 +9,7 @@ It provides:
 - vector classes for authored code
 - facing helpers for block-adjacent offsets
 - AABB utilities for spatial work
-- voxel/grid helpers for keyed locations and breadth-first traversal
+- voxel/grid helpers for location-first collections, stable keys, and breadth-first traversal
 - tween helpers for tick-based interpolation
 - scalar helpers for common numeric jobs
 
@@ -17,7 +17,7 @@ It provides:
 
 - authored gameplay code needs readable vector or AABB operations
 - code needs a stable vocabulary for block-adjacent offsets
-- code needs keyed voxel locations or breadth-first grid traversal
+- code needs voxel collections, stable location keys, or breadth-first grid traversal
 - a feature needs tweening over Bedrock ticks
 - scalar helper functions are enough and a full class wrapper would be unnecessary
 - Bedrock API values need light interop without building a second maths vocabulary around them
@@ -109,14 +109,18 @@ spatial model as `Vec3`, `Facing`, and `AABB`.
 
 Key helpers are:
 
+- `VoxelSet`
+- `VoxelMap`
 - `getVoxelKey(...)`
 - `parseVoxelKey(...)`
 - `createFacingVoxelOffsets(...)`
 - `floodFillVoxels(...)`
 
-These helpers are for keyed integer-grid work, adjacency, and breadth-first
-region capture. They still use `Vec3Like` inputs and `Vec3` outputs so they
-compose naturally with the rest of the maths surface. When code needs to offset
+These helpers are for integer-grid work, adjacency, stable location identity,
+and breadth-first region capture. `VoxelSet` and `VoxelMap<T>` let gameplay
+code stay location-first while the engine handles stable keys internally.
+The surface still uses `Vec3Like` inputs and `Vec3` runtime outputs so it
+composes naturally with the rest of the maths layer. When code needs to offset
 one voxel location, prefer `new Vec3(location).add(offset)` directly.
 
 ### Tweens
@@ -165,7 +169,7 @@ Prefer the facing helpers when:
 
 Prefer the voxel helpers when:
 
-- you need stable keys for integer grid locations
+- you need value-based voxel collections or stable keys for integer grid locations
 - you are walking connected regions in block space
 - you want breadth-first depth information during traversal
 

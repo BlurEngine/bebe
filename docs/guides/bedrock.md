@@ -27,6 +27,8 @@ Instead, it focuses on a small set of helpers that absorb the most common API
 friction:
 
 - safe block reads
+- adjacent block queries over readable locations
+- block-aware traversal over voxel neighbourhoods
 - safe slot and item reads
 - block mutation helpers with consistent fallback behaviour
 - durability helpers centred on item stacks and slots
@@ -47,6 +49,52 @@ otherwise.
 
 This keeps authored code out of repetitive try/catch wrappers around
 `dimension.getBlock(...)`.
+
+### `floodFillBlocks(...)`
+
+`floodFillBlocks(...)` combines safe block reads with voxel flood fill
+traversal.
+
+Use it when:
+
+- traversal should expand through readable blocks only
+- feature code keeps repeating `getBlockAt(...)` inside `floodFillVoxels(...)`
+- the traversal predicate needs both the voxel node and the resolved block
+
+The result keeps the same location-first voxel collection model as
+`floodFillVoxels(...)`:
+
+- `voxels` is a read-only voxel depth map
+- `voxels.keySet()` gives the visited locations as a read-only voxel set
+
+`floodFillBlocks(...)` intentionally returns the same flood-fill result shape as
+`floodFillVoxels(...)`. The Bedrock-specific behaviour stays in the readable
+block filter and block-aware predicate instead of introducing a second result
+type for the same traversal output.
+
+Its seed locations and neighbour offsets also use the same `Vec3Like`
+vocabulary as the maths flood-fill helpers. The Bedrock edge only adds the
+resolved `block` payload when the predicate runs.
+
+### `collectAdjacentBlocks(...)`, `findAdjacentBlock(...)`, and `someAdjacentBlock(...)`
+
+These helpers absorb the common "for each offset, read the block if possible,
+then test a predicate" pattern.
+
+Use them when:
+
+- a feature already knows the offsets it wants to inspect
+- unreadable adjacent locations should be skipped quietly
+- the code wants readable block payload plus the adjacent location and offset
+
+`collectAdjacentBlocks(...)` returns every matching readable neighbour.
+
+`findAdjacentBlock(...)` returns the first matching readable neighbour, which is
+often the cleaner fit for checks such as "does this block have a support
+anchor?" or "is there still a connected canopy block beside this attachment?"
+
+`someAdjacentBlock(...)` returns a boolean directly, which is often the clearest
+fit for yes/no adjacency checks.
 
 ### `setBlockTypeAt(...)` and `destroyBlockAt(...)`
 
@@ -92,6 +140,9 @@ stay outside this subpath.
 
 - one-off guarded Bedrock call -> `attemptBedrock(...)`
 - safe block lookup -> `getBlockAt(...)`
+- inspect readable neighbouring blocks ->
+  `collectAdjacentBlocks(...)`, `findAdjacentBlock(...)`, or `someAdjacentBlock(...)`
+- block-aware voxel traversal -> `floodFillBlocks(...)`
 - replace a block directly -> `setBlockTypeAt(...)`
 - break a block with natural-destroy intent -> `destroyBlockAt(...)`
 - read a player's current slot -> `getSelectedSlot(...)`

@@ -5,7 +5,10 @@ import {
     SURROUNDING_OFFSETS,
     SURROUNDING_VOXEL_OFFSETS,
     Vec3,
+    VoxelMap,
+    VoxelSet,
     createFacingVoxelOffsets,
+    floodFillVoxelSet,
     floodFillVoxels,
     getVoxelKey,
     parseVoxelKey,
@@ -94,14 +97,14 @@ describe("@blurengine/bebe/maths voxel helpers", () => {
             },
         });
 
-        expect([...result.locations.keys()].sort()).toEqual([
+        expect([...result.voxels.keySet().toKeys()].sort()).toEqual([
             "-1,0,0",
             "0,0,0",
             "1,0,0",
         ]);
-        expect(result.depths.get("0,0,0")).toBe(0);
-        expect(result.depths.get("-1,0,0")).toBe(1);
-        expect(result.depths.get("1,0,0")).toBe(1);
+        expect(result.voxels.get({ x: 0, y: 0, z: 0 })).toBe(0);
+        expect(result.voxels.get({ x: -1, y: 0, z: 0 })).toBe(1);
+        expect(result.voxels.get({ x: 1, y: 0, z: 0 })).toBe(1);
         expect(result.truncated).toBe(false);
     });
 
@@ -118,8 +121,108 @@ describe("@blurengine/bebe/maths voxel helpers", () => {
             },
         });
 
-        expect(result.locations.size).toBe(3);
-        expect(result.depths.get("10,0,0")).toBe(5);
+        expect(result.voxels.size).toBe(3);
+        expect(result.voxels.get({ x: 10, y: 0, z: 0 })).toBe(5);
         expect(result.truncated).toBe(true);
+    });
+
+    it("stores voxel membership by value rather than object identity", () => {
+        const locations = new VoxelSet([
+            { x: 1, y: 2, z: 3 },
+            new Vec3(1, 2, 3),
+            [4, 5, 6] as const,
+        ]);
+
+        expect(locations.size).toBe(2);
+        expect(locations.has(new Vec3(1, 2, 3))).toBe(true);
+        expect([...locations].map((location) => getVoxelKey(location))).toEqual(
+            ["1,2,3", "4,5,6"],
+        );
+    });
+
+    it("supports set algebra on voxel membership collections", () => {
+        const left = new VoxelSet([
+            { x: 0, y: 0, z: 0 },
+            { x: 1, y: 0, z: 0 },
+        ]);
+        const right = [
+            { x: 1, y: 0, z: 0 },
+            { x: 2, y: 0, z: 0 },
+        ] as const;
+
+        expect(left.union(right).toKeys()).toEqual(["0,0,0", "1,0,0", "2,0,0"]);
+        expect(left.difference(right).toKeys()).toEqual(["0,0,0"]);
+    });
+
+    it("creates voxel sets and maps from voxel keys", () => {
+        const locations = VoxelSet.fromKeys(["1,2,3", "4,5,6"]);
+        const depths = VoxelMap.fromKeys([
+            ["1,2,3", 4] as const,
+            ["4,5,6", 7] as const,
+        ]);
+
+        expect(locations.size).toBe(2);
+        expect(locations.has({ x: 1, y: 2, z: 3 })).toBe(true);
+        expect(locations.toKeys()).toEqual(["1,2,3", "4,5,6"]);
+        expect(depths.get(new Vec3(1, 2, 3))).toBe(4);
+        expect(depths.keySet().toKeys()).toEqual(["1,2,3", "4,5,6"]);
+    });
+
+    it("rejects malformed voxel keys", () => {
+        expect(() => VoxelSet.fromKeys(["bad-key"])).toThrow(
+            "VoxelSet.fromKeys requires valid voxel keys.",
+        );
+        expect(() => VoxelMap.fromKeys([["bad-key", 1] as const])).toThrow(
+            "VoxelMap.fromKeys requires valid voxel keys.",
+        );
+    });
+
+    it("supports selection helpers on voxel collections", () => {
+        const locations = new VoxelSet([
+            { x: 2, y: 0, z: 0 },
+            { x: 0, y: 0, z: 0 },
+            { x: 1, y: 0, z: 0 },
+        ]);
+        const depths = new VoxelMap<number>([
+            [{ x: 2, y: 0, z: 0 }, 2],
+            [{ x: 0, y: 0, z: 0 }, 0],
+            [{ x: 1, y: 0, z: 0 }, 1],
+        ]);
+
+        expect(locations.map((location) => location.x)).toEqual([2, 0, 1]);
+        expect(locations.filter((location) => location.x > 0).toKeys()).toEqual(
+            ["2,0,0", "1,0,0"],
+        );
+        expect(locations.find((location) => location.x === 0)).toEqual(
+            new Vec3(0, 0, 0),
+        );
+        expect(locations.some((location) => location.x === 1)).toBe(true);
+        expect(locations.every((location) => location.y === 0)).toBe(true);
+        expect(locations.slice(1).toKeys()).toEqual(["0,0,0", "1,0,0"]);
+        expect(
+            locations.sort((left, right) => left.x - right.x).toKeys(),
+        ).toEqual(["0,0,0", "1,0,0", "2,0,0"]);
+        expect(depths.map(([, depth]) => depth)).toEqual([2, 0, 1]);
+        expect(
+            depths
+                .filter(([, depth]) => depth > 0)
+                .keySet()
+                .toKeys(),
+        ).toEqual(["2,0,0", "1,0,0"]);
+    });
+
+    it("flood-fills within a known voxel membership set", () => {
+        const result = floodFillVoxelSet({
+            neighbours: [{ x: 1, y: 0, z: 0 }],
+            seeds: [{ location: { x: 0, y: 0, z: 0 } }],
+            within: new VoxelSet([
+                { x: 0, y: 0, z: 0 },
+                { x: 1, y: 0, z: 0 },
+            ]),
+        });
+
+        expect(result.voxels.keySet().toKeys()).toEqual(["0,0,0", "1,0,0"]);
+        expect(result.voxels.get({ x: 1, y: 0, z: 0 })).toBe(1);
+        expect(result.voxels.get({ x: 2, y: 0, z: 0 })).toBeUndefined();
     });
 });

@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Context, stagger, staggerGroups } from "@blurengine/bebe";
+import {
+    Context,
+    stagger,
+    staggerByGroup,
+    staggerGroups,
+} from "@blurengine/bebe";
 import {
     minecraftMockControl,
     system,
@@ -76,6 +81,41 @@ describe("stagger", () => {
             { item: "c", tick: 4 },
         ]);
         expect(completed).toHaveBeenCalledTimes(1);
+
+        ctx.dispose();
+    });
+
+    it("derives stable groups from a flat item list", () => {
+        const ctx = new Context();
+        const calls: Array<{ item: string; tick: number }> = [];
+
+        staggerByGroup(ctx, {
+            batchSize: 1,
+            groupBy(item) {
+                return item.length;
+            },
+            items: ["bbb", "a", "cc"],
+            order(items) {
+                return [...items].sort();
+            },
+            run(item) {
+                calls.push({ item, tick: system.currentTick });
+            },
+            ticksBetweenBatches: 1,
+            ticksBetweenGroups: 2,
+        });
+
+        minecraftMockControl.advance(1);
+        minecraftMockControl.advance(1);
+        minecraftMockControl.advance(1);
+        minecraftMockControl.advance(1);
+        minecraftMockControl.advance(1);
+
+        expect(calls).toEqual([
+            { item: "a", tick: 1 },
+            { item: "cc", tick: 3 },
+            { item: "bbb", tick: 5 },
+        ]);
 
         ctx.dispose();
     });

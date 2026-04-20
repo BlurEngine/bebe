@@ -7,8 +7,8 @@ Game engine library for Minecraft Bedrock scripting.
 ## Packages
 
 - `@blurengine/bebe`: engine lifecycle, ownership, and runtime scheduling primitives
-- `@blurengine/bebe/bedrock`: Bedrock edge helpers for block, slot, item, and durability work
-- `@blurengine/bebe/catalog`: immutable block catalogs plus the built-in vanilla preset
+- `@blurengine/bebe/bedrock`: Bedrock edge helpers for block, adjacency, block-traversal, slot, item, and durability work
+- `@blurengine/bebe/catalog`: immutable block catalogs plus the built-in vanilla preset and tag-traversal helpers
 - `@blurengine/bebe/maths`: vectors, facings, AABBs, voxel/grid helpers, tweens, and numeric helpers
 - `npm install @blurengine/bebe @minecraft/server`
 
@@ -34,10 +34,10 @@ tweenNumber(ctx, {
 
 - Provide a game engine layer for Bedrock scripting that can own runtime work, compose runtime systems, and grow into higher-level engine systems over time.
 - Keep timers, subscriptions, spawned child scopes, and other runtime work owned by one `Context`.
-- Provide small runtime helpers for staging owned work over ticks.
-- Keep Bedrock-specific friction at the edge through reusable helpers instead of repeating the same safety and fallback code inside gameplay features.
-- Provide an opt-in block catalog surface so Bedrock features can query curated vanilla block categories without carrying giant local tables.
-- Provide a separate maths surface for vector, facing, AABB, voxel/grid, tween, and scalar helpers without making the root package feel overloaded.
+- Provide small runtime helpers for staging owned work over ticks, including grouped schedules derived from flat item lists.
+- Keep Bedrock-specific friction at the edge through reusable helpers instead of repeating the same safety, adjacency, traversal, and fallback code inside gameplay features.
+- Provide an opt-in block catalog surface so Bedrock features can query curated vanilla block categories, collect tags from subsets, and build small derived indexes without carrying giant local tables or repetitive local query helpers.
+- Provide a separate maths surface for vector, facing, AABB, voxel/grid, voxel collections, tween, and scalar helpers without making the root package feel overloaded.
 
 ## Documentation
 

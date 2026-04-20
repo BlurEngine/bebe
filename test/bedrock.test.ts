@@ -4,7 +4,10 @@ import {
     applyDurabilityToSelectedSlot,
     applyDurabilityToSlot,
     attemptBedrock,
+    collectAdjacentBlocks,
     destroyBlockAt,
+    findAdjacentBlock,
+    floodFillBlocks,
     getBlockAt,
     getRemainingItemUses,
     getSelectedSlot,
@@ -12,7 +15,9 @@ import {
     isAirBlock,
     isLiquidBlock,
     setBlockTypeAt,
+    someAdjacentBlock,
 } from "@blurengine/bebe/bedrock";
+import { Vec3 } from "@blurengine/bebe/maths";
 
 type TestBlock = {
     isAir: boolean;
@@ -102,6 +107,105 @@ describe("@blurengine/bebe/bedrock", () => {
         );
         expect(isAirBlock(block as never)).toBe(true);
         expect(isLiquidBlock(block as never)).toBe(false);
+    });
+
+    it("flood-fills readable blocks through the bedrock edge", () => {
+        const matchingBlock = createBlock({ typeId: "minecraft:oak_log" });
+        const dimension = {
+            getBlock: vi.fn((location: { x: number; y: number; z: number }) =>
+                location.x <= 1 ? matchingBlock : undefined,
+            ),
+            runCommand: vi.fn(),
+        };
+
+        const result = floodFillBlocks({
+            dimension: dimension as never,
+            neighbours: [{ x: 1, y: 0, z: 0 }],
+            seeds: [{ location: { x: 0, y: 0, z: 0 } }],
+            shouldEnter(node) {
+                return node.block.typeId === "minecraft:oak_log";
+            },
+        });
+
+        expect(result.voxels.keySet().toKeys()).toEqual(["0,0,0", "1,0,0"]);
+        expect(result.truncated).toBe(false);
+    });
+
+    it("collects and finds readable adjacent blocks", () => {
+        const matchingBlock = createBlock({ typeId: "minecraft:oak_log" });
+        const otherBlock = createBlock({ typeId: "minecraft:birch_log" });
+        const dimension = {
+            getBlock: vi.fn((location: { x: number; y: number; z: number }) => {
+                if (location.x === 1) {
+                    return matchingBlock;
+                }
+
+                if (location.y === 1) {
+                    return otherBlock;
+                }
+
+                return undefined;
+            }),
+            runCommand: vi.fn(),
+        };
+
+        expect(
+            collectAdjacentBlocks(
+                dimension as never,
+                { x: 0, y: 0, z: 0 },
+                {
+                    offsets: [
+                        { x: 1, y: 0, z: 0 },
+                        { x: 0, y: 1, z: 0 },
+                    ],
+                },
+            ),
+        ).toEqual([
+            {
+                block: matchingBlock,
+                location: new Vec3(1, 0, 0),
+                offset: new Vec3(1, 0, 0),
+            },
+            {
+                block: otherBlock,
+                location: new Vec3(0, 1, 0),
+                offset: new Vec3(0, 1, 0),
+            },
+        ]);
+        expect(
+            findAdjacentBlock(
+                dimension as never,
+                { x: 0, y: 0, z: 0 },
+                {
+                    offsets: [
+                        { x: 0, y: 1, z: 0 },
+                        { x: 1, y: 0, z: 0 },
+                    ],
+                    filter(node) {
+                        return node.block.typeId === "minecraft:oak_log";
+                    },
+                },
+            ),
+        ).toEqual({
+            block: matchingBlock,
+            location: new Vec3(1, 0, 0),
+            offset: new Vec3(1, 0, 0),
+        });
+        expect(
+            someAdjacentBlock(
+                dimension as never,
+                { x: 0, y: 0, z: 0 },
+                {
+                    offsets: [
+                        { x: 0, y: 1, z: 0 },
+                        { x: 1, y: 0, z: 0 },
+                    ],
+                    filter(node) {
+                        return node.block.typeId === "minecraft:oak_log";
+                    },
+                },
+            ),
+        ).toBe(true);
     });
 
     it("sets and destroys blocks with fallback behavior", () => {

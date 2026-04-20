@@ -46,14 +46,54 @@ Example tags:
 - `kind:attachment`
 - `feature:education`
 
-Queries are structured object filters rather than a string DSL.
+Queries are structured object filters rather than a string DSL, and the
+primary authored surface is a catalog-bound selection.
 
 ```ts
 import { vanillaBlockCatalog } from "@blurengine/bebe/catalog";
 
-const oakLogs = vanillaBlockCatalog.queryIds({
-  all: ["family:oak", "kind:log"],
+const OAK_LOGS = vanillaBlockCatalog.select({
+  all: ["family:oak"],
+  oneOf: [["kind:log"]],
 });
+
+const oakLogIds = OAK_LOGS.ids();
+```
+
+Selections are immutable, lazy, and refineable. Declare one selection for the
+concept you care about, then derive ids, grouped tags, or narrower selections
+from that object.
+
+```ts
+import { vanillaBlockCatalog } from "@blurengine/bebe/catalog";
+
+const TREE_LOGS = vanillaBlockCatalog.select({
+  oneOf: [["kind:log", "kind:wood"]],
+});
+
+const isOakLog = TREE_LOGS.hasId("minecraft:oak_log");
+const logCount = TREE_LOGS.size;
+const logTypeIds = TREE_LOGS.idSet();
+const logFamilies = TREE_LOGS.tags({
+  prefix: "family:",
+});
+const oakFamilies = TREE_LOGS.tags({
+  prefix: "family:",
+  test: (tag) => tag.endsWith("oak"),
+});
+const logIdsByFamily = TREE_LOGS.groupIdsByTag({
+  prefix: "family:",
+});
+const logSelectionsByFamily = TREE_LOGS.groupSelectionsByTag({
+  prefix: "family:",
+});
+const oakLogs = logSelectionsByFamily.get("family:oak")?.ids();
+
+const OAK_CANOPY = vanillaBlockCatalog.select({
+  oneOf: [["family:oak", "family:azalea"], ["kind:leaf"]],
+});
+
+const oakCanopyBlocks = OAK_CANOPY.ids();
 ```
 
 ## Important Behaviors
@@ -65,9 +105,12 @@ const oakLogs = vanillaBlockCatalog.queryIds({
 - Some blocks intentionally end up with no tags at all. `air` is a normal example. The preset is allowed to stay sparse when a block id does not match a rule that has earned its keep yet.
 - The preset does not add a synthetic "this is vanilla" tag to every block. The block id namespace already carries that information, so the built-in tag set stays focused on categories that are harder to infer cleanly from the id alone.
 - The vanilla preset keeps its tag vocabulary intentionally small and extensible. It is meant to help feature code stay declarative, not to model every gameplay concept in the engine on day one.
-- Prefer plural family helpers such as `getFamilyTags(...)` and `getCatalogFamilyTags(...)` when a block can intentionally carry more than one `family:*` tag.
-- Singular helpers such as `getFamilyTag(...)` and `getCatalogFamilyTag(...)` are first-match convenience helpers. They are fine when one family is expected, but they should not be treated as the authoritative whole family set.
-- `queryFamily(...)` and `queryCatalogFamily(...)` are convenience helpers for querying one known `family:*` tag at a time.
+- `select(...)` is the main catalog query surface. It is the clearest way to keep one declared concept, then derive ids, entries, collected tags, grouped ids, or narrower selections from it.
+- `queryIds(...)`, `queryIdSet(...)`, and `queryEntries(...)` are thin one-shot escape hatches built on top of selections. They are useful when a selection would only be used once.
+- `oneOf` is the grouped-match primitive. Use it when a query needs "one tag from each category" semantics instead of rebuilding loops in feature code.
+- `tags(...)`, `groupIdsByTag(...)`, and `groupSelectionsByTag(...)` accept a shared tag filter shape. Use `prefix` for the common case, and `test(tag)` when the selection needs a more exact tag matcher.
+- `groupSelectionsByTag(...)` is the catalog-side answer when feature code needs one grouped tag cohort to stay first-class as a reusable selection rather than dropping down to raw id arrays.
+- `getTags(id, filter)` is the per-entry traversal helper when feature code needs to inspect one specific block id directly. Unknown or nullish ids return an empty tag list.
 
 ## Customizing A Catalog
 
@@ -97,6 +140,7 @@ This keeps project customization small and upgrade-friendly.
 
 - use `BlockCatalog` when you need a generic immutable block tagging and query surface
 - use `vanillaBlockCatalog` when you want maintained vanilla block categories
+- prefer selections when you are defining a reusable catalog concept inside feature code
 - use overlays when project code needs to extend or tweak the built-in preset
 - keep feature-specific rules, such as exact tree-collapse behavior, in project code rather than forcing them into the engine preset
 
