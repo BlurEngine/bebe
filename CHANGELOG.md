@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- [`c0e6521`](https://github.com/BlurEngine/bebe/commit/c0e6521b067b09d26182a217bc5bf376353e6c50) Thanks [@SupaHam](https://github.com/SupaHam)! - Add more support for vector ops, enhance catalog API, more bedrock block util funcs, and staggerByGroup.
+
 ## 0.4.0
 
 ### Minor Changes
