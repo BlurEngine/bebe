@@ -34,6 +34,7 @@ tweenNumber(ctx, {
 
 - Provide a game engine layer for Bedrock scripting that can own runtime work, compose runtime systems, and grow into higher-level engine systems over time.
 - Keep timers, subscriptions, spawned child scopes, and other runtime work owned by one `Context`.
+- Expose simple derived event sources through `EventSignal` instead of repeating local emitter code in each feature.
 - Provide small runtime helpers for staging owned work over ticks, including grouped schedules derived from flat item lists.
 - Keep Bedrock-specific friction at the edge through reusable helpers instead of repeating the same safety, adjacency, traversal, and fallback code inside gameplay features.
 - Provide an opt-in block catalog surface so Bedrock features can query curated vanilla block categories, collect tags from subsets, and build small derived indexes without carrying giant local tables or repetitive local query helpers.

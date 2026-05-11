@@ -31,6 +31,7 @@ These are the canonical guides for `@blurengine/bebe` and its public subpaths.
 These docs cover:
 
 - lifecycle ownership through `Context`
+- derived local events through `EventSignal`
 - root-level staggered runtime work
 - the Bedrock edge helpers under `@blurengine/bebe/bedrock`
 - the block catalog helpers and vanilla preset under `@blurengine/bebe/catalog`

@@ -57,6 +57,29 @@ Child scopes inherit service lookup from their parent by default. This is useful
 - `subscribe({ source, n }, handler)` auto-unsubscribes after `n` handler runs
 - the returned unsubscribe function is useful when a feature needs to stop earlier than the context lifetime
 
+### `EventSignal`
+
+Use `EventSignal` when a feature derives its own event from Bedrock state and wants the result to behave like other subscribable sources.
+
+```ts
+import { Context, EventSignal } from "@blurengine/bebe";
+
+type ExampleAfterEvent = {
+  readonly value: number;
+};
+
+const ctx = new Context();
+const example = new EventSignal<ExampleAfterEvent>();
+
+ctx.subscribe(example, (event) => {
+  console.warn(event.value);
+});
+
+example.emit({ value: 1 });
+```
+
+`EventSignal` snapshots listeners while emitting, so unsubscribe calls during one emit do not skip listeners that were already queued for that event.
+
 ### `onDispose(...)`
 
 `onDispose(...)` callbacks are scheduled through `system.run(...)` during disposal.
@@ -94,6 +117,7 @@ Most authored code should stay inside a small set of patterns:
 - feature lifetime -> `Context`
 - shorter nested lifetime -> `createScope(...)`
 - Bedrock event ownership -> `subscribe(...)`
+- derived local event source -> `EventSignal`
 - shared runtime helper -> service
 - custom teardown with no dedicated helper -> `use(...)`
 

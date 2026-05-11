@@ -7,6 +7,7 @@ import * as catalog from "@blurengine/bebe/catalog";
 import * as maths from "@blurengine/bebe/maths";
 import {
     Context,
+    EventSignal,
     ROOT_CONTEXT,
     RootContext,
     createServiceKey,
@@ -26,6 +27,7 @@ describe("package root exports", () => {
         expect(Object.keys(bebe).sort()).toEqual(
             [
                 "Context",
+                "EventSignal",
                 "ROOT_CONTEXT",
                 "RootContext",
                 "createServiceKey",
@@ -41,6 +43,7 @@ describe("package root exports", () => {
 
     it("matches the direct root exports", () => {
         expect(bebe.Context).toBe(Context);
+        expect(bebe.EventSignal).toBe(EventSignal);
         expect(bebe.ROOT_CONTEXT).toBe(ROOT_CONTEXT);
         expect(bebe.RootContext).toBe(RootContext);
         expect(bebe.createServiceKey).toBe(createServiceKey);
