@@ -1,6 +1,6 @@
 {
   "name": "@blurengine/bebe",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "BlurEngine game library for Minecraft: Bedrock Edition Scripting API",
   "keywords": [
     "blurengine",
