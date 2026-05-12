@@ -13,6 +13,8 @@ slot handling, or fallback behaviour.
 - block reads can fail because a location is unloaded or out of bounds
 - block writes need a consistent fallback path
 - slot or item reads can throw when inventory state is invalid
+- item entity stacks should be read without leaking component access into
+  feature code
 - durability should be applied at the item or slot level instead of being tied
   to one gameplay rule
 
@@ -29,7 +31,7 @@ friction:
 - safe block reads
 - adjacent block queries over readable locations
 - block-aware traversal over voxel neighbourhoods
-- safe slot and item reads
+- safe slot, item, and item entity reads
 - block mutation helpers with consistent fallback behaviour
 - durability helpers centred on item stacks and slots
 
@@ -114,6 +116,13 @@ These helpers move slot handling to the actual Bedrock failure boundary.
 That means authored code can work at the slot level first and only reach for a
 player helper when the selected-slot convenience is genuinely useful.
 
+### `getEntityItemStack(...)`
+
+This helper returns a copied item stack from an item entity.
+
+It returns `undefined` when the entity is invalid, is not an item entity, or the
+item stack cannot be read.
+
 ### `getRemainingItemUses(...)`
 
 This helper reports remaining uses from an item's durability component.
@@ -147,6 +156,7 @@ stay outside this subpath.
 - break a block with natural-destroy intent -> `destroyBlockAt(...)`
 - read a player's current slot -> `getSelectedSlot(...)`
 - work with the item in a slot -> `getSlotItem(...)`
+- read the stack represented by an item entity -> `getEntityItemStack(...)`
 - compute or apply durability independent of player logic ->
   `getRemainingItemUses(...)`, `applyDurabilityToItem(...)`, or
   `applyDurabilityToSlot(...)`

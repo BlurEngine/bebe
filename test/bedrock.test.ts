@@ -9,6 +9,7 @@ import {
     findAdjacentBlock,
     floodFillBlocks,
     getBlockAt,
+    getEntityItemStack,
     getRemainingItemUses,
     getSelectedSlot,
     getSlotItem,
@@ -38,6 +39,7 @@ type TestDurability = {
 };
 
 type TestItemStack = {
+    clone: ReturnType<typeof vi.fn>;
     getComponent: ReturnType<typeof vi.fn>;
 };
 
@@ -74,11 +76,14 @@ function createDurability(overrides?: Partial<TestDurability>): TestDurability {
 }
 
 function createItemStack(durability?: TestDurability): TestItemStack {
-    return {
+    const item = {
+        clone: vi.fn(),
         getComponent: vi.fn((componentId: string) =>
             componentId === "minecraft:durability" ? durability : undefined,
         ),
     };
+    item.clone.mockReturnValue({ ...item });
+    return item;
 }
 
 function createSlot(item?: TestItemStack): TestSlot {
@@ -244,6 +249,30 @@ describe("@blurengine/bebe/bedrock", () => {
 
         expect(getSelectedSlot(player as never)).toBe(slot);
         expect(getSlotItem(slot as never)).toBe(item);
+    });
+
+    it("reads a copied item stack from an item entity safely", () => {
+        const copiedItem = createItemStack();
+        const item = createItemStack();
+        item.clone.mockReturnValue(copiedItem);
+        const entity = {
+            getComponent: vi.fn(() => ({
+                itemStack: item,
+            })),
+        };
+
+        expect(getEntityItemStack(entity as never)).toBe(copiedItem);
+        expect(item.clone).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns undefined when an item entity stack cannot be read", () => {
+        const entity = {
+            getComponent: vi.fn(() => {
+                throw new Error("invalid entity");
+            }),
+        };
+
+        expect(getEntityItemStack(entity as never)).toBeUndefined();
     });
 
     it("reads remaining uses from item durability", () => {

@@ -5,6 +5,7 @@ import {
     type BlockType,
     type ContainerSlot,
     type Dimension,
+    type Entity,
     type ItemStack,
     type Player,
     type Vector3,
@@ -366,6 +367,17 @@ export function getSlotItem(slot: ContainerSlot): ItemStack | undefined {
     }
 
     return attemptBedrock(() => slot.getItem());
+}
+
+/**
+ * Returns a copied item stack from an item entity, or `undefined` when the
+ * entity is invalid, is not an item entity, or the item stack cannot be read.
+ */
+export function getEntityItemStack(entity: Entity): ItemStack | undefined {
+    const item = attemptBedrock(() =>
+        entity.getComponent(EntityComponentTypes.Item),
+    );
+    return attemptBedrock(() => item?.itemStack.clone());
 }
 
 /**

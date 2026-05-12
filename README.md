@@ -7,8 +7,9 @@ Game engine library for Minecraft Bedrock scripting.
 ## Packages
 
 - `@blurengine/bebe`: engine lifecycle, ownership, and runtime scheduling primitives
-- `@blurengine/bebe/bedrock`: Bedrock edge helpers for block, adjacency, block-traversal, slot, item, and durability work
+- `@blurengine/bebe/bedrock`: Bedrock edge helpers for block, adjacency, block-traversal, slot, item stack, item entity, and durability work
 - `@blurengine/bebe/catalog`: immutable block catalogs plus the built-in vanilla preset and tag-traversal helpers
+- `@blurengine/bebe/features/fishing`: opt-in derived events around vanilla fishing behaviour
 - `@blurengine/bebe/maths`: vectors, facings, AABBs, voxel/grid helpers, tweens, and numeric helpers
 - `npm install @blurengine/bebe @minecraft/server`
 
@@ -38,6 +39,7 @@ tweenNumber(ctx, {
 - Provide small runtime helpers for staging owned work over ticks, including grouped schedules derived from flat item lists.
 - Keep Bedrock-specific friction at the edge through reusable helpers instead of repeating the same safety, adjacency, traversal, and fallback code inside gameplay features.
 - Provide an opt-in block catalog surface so Bedrock features can query curated vanilla block categories, collect tags from subsets, and build small derived indexes without carrying giant local tables or repetitive local query helpers.
+- Provide opt-in feature modules for common derived Bedrock behaviours, starting with vanilla fishing events.
 - Provide a separate maths surface for vector, facing, AABB, voxel/grid, voxel collections, tween, and scalar helpers without making the root package feel overloaded.
 
 ## Documentation
@@ -47,6 +49,7 @@ tweenNumber(ctx, {
 - [Stagger Guide](./docs/guides/stagger.md)
 - [Bedrock Guide](./docs/guides/bedrock.md)
 - [Catalog Guide](./docs/guides/catalog.md)
+- [Fishing Guide](./docs/guides/fishing.md)
 - [Maths Guide](./docs/guides/maths.md)
 - [Voxels Guide](./docs/guides/voxels.md)
 - [Changelog](./CHANGELOG.md)
