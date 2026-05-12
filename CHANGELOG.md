@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.1
+
+### Patch Changes
+
+- [`7df0d52`](https://github.com/BlurEngine/bebe/commit/7df0d52bd97b8279054483241665eab663336eb3) Thanks [@SupaHam](https://github.com/SupaHam)! - Add opt-in derived fishing events under `@blurengine/bebe/features/fishing`.
+
+- [`25ed66d`](https://github.com/BlurEngine/bebe/commit/25ed66d219bd6024b14ed8cf4db363cd0d0973fd) Thanks [@SupaHam](https://github.com/SupaHam)! - Add a Bedrock helper for safely reading copied item stacks from item entities.
+
+- [`ba13fbc`](https://github.com/BlurEngine/bebe/commit/ba13fbcb37ed3378b402ea6a28f59a7088466f28) Thanks [@SupaHam](https://github.com/SupaHam)! - Add a root-level `EventSignal` subscribable source for derived framework and project events.
+  Add `EventSignalSource` for public APIs that should expose subscription without exposing event emission.
+
 ## 0.5.0
 
 ### Minor Changes
