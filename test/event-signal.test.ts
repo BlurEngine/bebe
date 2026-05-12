@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { Context, EventSignal } from "@blurengine/bebe";
+import type { EventSignalSource } from "@blurengine/bebe";
 
 describe("EventSignal", () => {
     it("subscribes, emits, and unsubscribes event listeners", () => {
@@ -34,9 +35,10 @@ describe("EventSignal", () => {
     it("can be owned by Context.subscribe", () => {
         const ctx = new Context();
         const signal = new EventSignal<{ value: number }>();
+        const source: EventSignalSource<{ value: number }> = signal;
         const listener = vi.fn();
 
-        ctx.subscribe(signal, listener);
+        ctx.subscribe(source, listener);
         signal.emit({ value: 1 });
         ctx.dispose();
         signal.emit({ value: 2 });

@@ -60,6 +60,7 @@ Child scopes inherit service lookup from their parent by default. This is useful
 ### `EventSignal`
 
 Use `EventSignal` when a feature derives its own event from Bedrock state and wants the result to behave like other subscribable sources.
+Expose `EventSignalSource` from public feature APIs when callers should be able to subscribe without emitting the event themselves.
 
 ```ts
 import { Context, EventSignal } from "@blurengine/bebe";
