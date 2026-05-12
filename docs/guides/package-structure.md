@@ -15,11 +15,12 @@ Use it when you are choosing imports, navigating the codebase, or deciding where
 
 ## Core Model
 
-`bebe` has four public package surfaces today:
+`bebe` has five public package surfaces today:
 
 - `@blurengine/bebe`
 - `@blurengine/bebe/bedrock`
 - `@blurengine/bebe/catalog`
+- `@blurengine/bebe/features/fishing`
 - `@blurengine/bebe/maths`
 
 The root package stays focused on lifecycle and runtime ownership.
@@ -37,6 +38,12 @@ The catalog subpath holds:
 - structured tag queries
 - overlay helpers
 - the built-in vanilla block preset
+
+The fishing feature subpath holds:
+
+- derived vanilla fishing events
+- hook session tracking
+- catch item helpers
 
 The maths subpath holds:
 
@@ -65,6 +72,7 @@ As a consumer, the important import paths are:
 - `@blurengine/bebe`
 - `@blurengine/bebe/bedrock`
 - `@blurengine/bebe/catalog`
+- `@blurengine/bebe/features/fishing`
 - `@blurengine/bebe/maths`
 
 ### `src/`
@@ -118,6 +126,7 @@ It is the package build result, not the authored source of truth.
 - lifecycle and runtime ownership -> `@blurengine/bebe`
 - Bedrock API edge helpers -> `@blurengine/bebe/bedrock`
 - immutable block catalogs and the vanilla block preset -> `@blurengine/bebe/catalog`
+- derived vanilla fishing events -> `@blurengine/bebe/features/fishing`
 - vectors, facings, AABBs, voxel/grid helpers, tweens, and numeric helpers -> `@blurengine/bebe/maths`
 
 Consumers should import from the public package entrypoints, not from `src/` or `lib/`.
@@ -127,6 +136,7 @@ Consumers should import from the public package entrypoints, not from `src/` or 
 - new lifecycle or runtime ownership primitive -> root package surface
 - new Bedrock edge helper -> `src/bedrock/`
 - new block catalog or generated vanilla block category data -> `src/catalog/`
+- new optional gameplay feature module -> `src/features/<name>/`
 - new maths primitive, voxel/grid helper, or traversal helper -> `src/maths/`
 - tests -> `test/`
 - reader-facing usage and behaviour docs -> `docs/guides/`

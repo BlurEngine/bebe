@@ -23,6 +23,12 @@ export default defineConfig({
                 ),
             },
             {
+                find: /^@blurengine\/bebe\/features\/fishing$/,
+                replacement: fileURLToPath(
+                    new URL("./src/features/fishing/index.ts", import.meta.url),
+                ),
+            },
+            {
                 find: /^@blurengine\/bebe$/,
                 replacement: fileURLToPath(
                     new URL("./src/index.ts", import.meta.url),

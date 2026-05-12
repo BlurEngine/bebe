@@ -5,12 +5,59 @@ type ScheduledJob = {
     callback: () => void;
 };
 
-type EntityRemoveHandler = (event: { removedEntity: { id?: string } }) => void;
+type EventHandler<TEvent> = (event: TEvent) => void;
+type EntityRemoveBeforeEvent = { removedEntity: { id?: string } };
+type EntityRemoveHandler = EventHandler<EntityRemoveBeforeEvent>;
+
+class MockEventSignal<TEvent> {
+    readonly #handlers = new Set<EventHandler<TEvent>>();
+
+    subscribe(handler: EventHandler<TEvent>): EventHandler<TEvent> {
+        this.#handlers.add(handler);
+        return handler;
+    }
+
+    unsubscribe(handler: EventHandler<TEvent>): void {
+        this.#handlers.delete(handler);
+    }
+
+    emit(event: TEvent): void {
+        for (const handler of Array.from(this.#handlers)) {
+            handler(event);
+        }
+    }
+
+    reset(): void {
+        this.#handlers.clear();
+    }
+}
 
 let currentTick = 0;
 let nextHandle = 1;
 const jobs = new Map<number, ScheduledJob>();
 const entityRemoveHandlers = new Set<EntityRemoveHandler>();
+const afterEvents = {
+    entityItemPickup: new MockEventSignal<{
+        entity: Entity;
+        items: ItemStack[];
+    }>(),
+    entityRemove: new MockEventSignal<{
+        removedEntityId: string;
+        typeId: string;
+    }>(),
+    entitySpawn: new MockEventSignal<{
+        entity: Entity;
+    }>(),
+    itemReleaseUse: new MockEventSignal<{
+        itemStack?: ItemStack;
+        source: Player;
+    }>(),
+    itemUse: new MockEventSignal<{
+        itemStack?: ItemStack;
+        source: Player;
+    }>(),
+};
+let allPlayers: Player[] = [];
 
 function schedule(
     kind: ScheduledJob["kind"],
@@ -63,6 +110,7 @@ export const system = {
 };
 
 export const EntityComponentTypes = {
+    Item: "minecraft:item",
     Inventory: "minecraft:inventory",
 } as const;
 
@@ -79,7 +127,98 @@ export enum Direction {
     West = "West",
 }
 
+export type Vector3 = {
+    readonly x: number;
+    readonly y: number;
+    readonly z: number;
+};
+
+export type ItemStack = {
+    readonly typeId: string;
+    clone(): ItemStack;
+};
+
+export class Dimension {
+    readonly id: string;
+
+    constructor(id = "minecraft:overworld") {
+        this.id = id;
+    }
+}
+
+export class Entity {
+    readonly id: string;
+    readonly typeId: string;
+    dimension: Dimension;
+    isInWater = false;
+    isValid = true;
+    location: Vector3;
+    #components = new Map<string, unknown>();
+    #velocity: Vector3 = { x: 0, y: 0, z: 0 };
+
+    constructor(options: {
+        id: string;
+        typeId: string;
+        dimension?: Dimension;
+        location?: Vector3;
+        velocity?: Vector3;
+    }) {
+        this.id = options.id;
+        this.typeId = options.typeId;
+        this.dimension = options.dimension ?? new Dimension();
+        this.location = options.location ?? { x: 0, y: 0, z: 0 };
+        this.#velocity = options.velocity ?? this.#velocity;
+    }
+
+    getComponent(componentId: string): unknown {
+        return this.#components.get(componentId);
+    }
+
+    getComponents(): { typeId: string }[] {
+        return Array.from(this.#components.keys()).map((typeId) => ({
+            typeId,
+        }));
+    }
+
+    getVelocity(): Vector3 {
+        return this.#velocity;
+    }
+
+    remove(): void {
+        this.isValid = false;
+    }
+
+    setComponent(componentId: string, component: unknown): void {
+        this.#components.set(componentId, component);
+    }
+
+    setVelocity(velocity: Vector3): void {
+        this.#velocity = velocity;
+    }
+}
+
+export class Player extends Entity {
+    readonly name: string;
+    selectedSlotIndex = 0;
+
+    constructor(options: {
+        id: string;
+        name?: string;
+        dimension?: Dimension;
+        location?: Vector3;
+    }) {
+        super({
+            id: options.id,
+            typeId: "minecraft:player",
+            dimension: options.dimension,
+            location: options.location,
+        });
+        this.name = options.name ?? options.id;
+    }
+}
+
 export const world = {
+    afterEvents,
     beforeEvents: {
         entityRemove: {
             subscribe(handler: EntityRemoveHandler) {
@@ -89,6 +228,9 @@ export const world = {
                 entityRemoveHandlers.delete(handler);
             },
         },
+    },
+    getAllPlayers() {
+        return allPlayers;
     },
 };
 
@@ -104,10 +246,23 @@ export const minecraftMockControl = {
             handler({ removedEntity: entity });
         }
     },
+    emitAfterEvent<TEventName extends keyof typeof afterEvents>(
+        eventName: TEventName,
+        event: Parameters<(typeof afterEvents)[TEventName]["emit"]>[0],
+    ) {
+        afterEvents[eventName].emit(event as never);
+    },
     reset() {
         currentTick = 0;
         nextHandle = 1;
         jobs.clear();
         entityRemoveHandlers.clear();
+        allPlayers = [];
+        for (const signal of Object.values(afterEvents)) {
+            signal.reset();
+        }
+    },
+    setPlayers(players: Player[]) {
+        allPlayers = players;
     },
 };

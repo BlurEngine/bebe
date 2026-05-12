@@ -14,17 +14,15 @@ const tempTypesDir = resolve(rootDir, "temp", "types");
 const outDir = resolve(rootDir, "lib", "types");
 fs.mkdirSync(outDir, { recursive: true });
 
-// Build modules map: always root, plus subpaths discovered in temp/types and allowed by package.json exports
+// Build modules map: always root, plus directory subpaths declared by package.json exports.
 const modules = { [pkg.name]: resolve(tempTypesDir, "index.d.ts") };
 const exportSubpaths = Object.keys(pkg.exports || {})
     .filter((k) => k !== ".")
     .map((k) => k.replace(/^\.\//, ""));
-for (const entry of fs.readdirSync(tempTypesDir, { withFileTypes: true })) {
-    if (!entry.isDirectory()) continue;
-    if (!exportSubpaths.includes(entry.name)) continue; // only include declared subpaths
-    const indexPath = resolve(tempTypesDir, entry.name, "index.d.ts");
+for (const subpath of exportSubpaths) {
+    const indexPath = resolve(tempTypesDir, subpath, "index.d.ts");
     if (fs.existsSync(indexPath)) {
-        modules[`${pkg.name}/${entry.name}`] = indexPath;
+        modules[`${pkg.name}/${subpath}`] = indexPath;
     }
 }
 

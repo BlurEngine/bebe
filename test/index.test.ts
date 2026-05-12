@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import * as bebe from "@blurengine/bebe";
 import * as bedrock from "@blurengine/bebe/bedrock";
 import * as catalog from "@blurengine/bebe/catalog";
+import * as fishing from "@blurengine/bebe/features/fishing";
 import * as maths from "@blurengine/bebe/maths";
 import {
     Context,
@@ -66,6 +67,7 @@ describe("package root exports", () => {
                 "floodFillBlocks",
                 "getBlockAt",
                 "getBlockTypeId",
+                "getEntityItemStack",
                 "getRemainingItemUses",
                 "getSelectedSlot",
                 "getSlotItem",
@@ -89,6 +91,12 @@ describe("package root exports", () => {
         );
     });
 
+    it("exposes the fishing feature subpath", () => {
+        expect(Object.keys(fishing).sort()).toEqual(
+            ["DEFAULT_FISHING_EVENT_CONFIG", "installFishingEvents"].sort(),
+        );
+    });
+
     it("exposes the maths subpath", () => {
         expect(maths.VoxelMap).toBeDefined();
         expect(maths.VoxelSet).toBeDefined();
@@ -96,7 +104,7 @@ describe("package root exports", () => {
         expect(maths.floodFillVoxels).toBeDefined();
     });
 
-    it("declares the root, bedrock, maths, and catalog exports", () => {
+    it("declares the root, bedrock, maths, catalog, and fishing exports", () => {
         expect(packageJson.exports).toEqual({
             ".": {
                 types: "./lib/types/bebe-public.d.ts",
@@ -113,6 +121,10 @@ describe("package root exports", () => {
             "./catalog": {
                 types: "./lib/types/bebe-public.d.ts",
                 default: "./lib/catalog/index.js",
+            },
+            "./features/fishing": {
+                types: "./lib/types/bebe-public.d.ts",
+                default: "./lib/features/fishing/index.js",
             },
         });
     });
