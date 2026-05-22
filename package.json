@@ -41,6 +41,10 @@
     "./features/fishing": {
       "types": "./lib/types/bebe-public.d.ts",
       "default": "./lib/features/fishing/index.js"
+    },
+    "./internal/link/bds": {
+      "types": "./lib/types/bebe-public.d.ts",
+      "default": "./lib/internal/link/bds.js"
     }
   },
   "type": "module",
@@ -86,12 +90,19 @@
     "prepare": "npm run hooks:install"
   },
   "peerDependencies": {
-    "@minecraft/server": "^2.3.0"
+    "@minecraft/server": "^2.3.0",
+    "@minecraft/server-net": "^1.0.0-beta"
+  },
+  "peerDependenciesMeta": {
+    "@minecraft/server-net": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.29.7",
     "@minecraft/server": "^2.3.0",
+    "@minecraft/server-net": "^1.0.0-beta",
     "@minecraft/vanilla-data": "^1.26.10",
     "@typescript-eslint/eslint-plugin": "^8.58.0",
     "@typescript-eslint/parser": "^8.58.0",

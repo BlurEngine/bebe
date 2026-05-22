@@ -29,9 +29,24 @@ export default defineConfig({
                 ),
             },
             {
+                find: /^@blurengine\/bebe\/internal\/link\/bds$/,
+                replacement: fileURLToPath(
+                    new URL("./src/internal/link/bds.ts", import.meta.url),
+                ),
+            },
+            {
                 find: /^@blurengine\/bebe$/,
                 replacement: fileURLToPath(
                     new URL("./src/index.ts", import.meta.url),
+                ),
+            },
+            {
+                find: "@minecraft/server-net",
+                replacement: fileURLToPath(
+                    new URL(
+                        "./test/support/minecraft-server-net.mock.ts",
+                        import.meta.url,
+                    ),
                 ),
             },
             {

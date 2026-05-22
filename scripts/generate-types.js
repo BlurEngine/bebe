@@ -23,6 +23,12 @@ for (const subpath of exportSubpaths) {
     const indexPath = resolve(tempTypesDir, subpath, "index.d.ts");
     if (fs.existsSync(indexPath)) {
         modules[`${pkg.name}/${subpath}`] = indexPath;
+        continue;
+    }
+
+    const filePath = resolve(tempTypesDir, `${subpath}.d.ts`);
+    if (fs.existsSync(filePath)) {
+        modules[`${pkg.name}/${subpath}`] = filePath;
     }
 }
 

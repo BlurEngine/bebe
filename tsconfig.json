@@ -25,6 +25,7 @@
       "@blurengine/bebe/bedrock": ["./src/bedrock/index.ts"],
       "@blurengine/bebe/catalog": ["./src/catalog/index.ts"],
       "@blurengine/bebe/features/fishing": ["./src/features/fishing/index.ts"],
+      "@blurengine/bebe/internal/link/bds": ["./src/internal/link/bds.ts"],
       "@blurengine/bebe/maths": ["./src/maths/index.ts"]
     }
   }

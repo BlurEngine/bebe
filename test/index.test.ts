@@ -5,10 +5,13 @@ import * as bebe from "@blurengine/bebe";
 import * as bedrock from "@blurengine/bebe/bedrock";
 import * as catalog from "@blurengine/bebe/catalog";
 import * as fishing from "@blurengine/bebe/features/fishing";
+import * as internalLinkBds from "@blurengine/bebe/internal/link/bds";
 import * as maths from "@blurengine/bebe/maths";
 import {
     Context,
     EventSignal,
+    Link,
+    Metrics,
     ROOT_CONTEXT,
     RootContext,
     createServiceKey,
@@ -29,6 +32,8 @@ describe("package root exports", () => {
             [
                 "Context",
                 "EventSignal",
+                "Link",
+                "Metrics",
                 "ROOT_CONTEXT",
                 "RootContext",
                 "createServiceKey",
@@ -45,6 +50,8 @@ describe("package root exports", () => {
     it("matches the direct root exports", () => {
         expect(bebe.Context).toBe(Context);
         expect(bebe.EventSignal).toBe(EventSignal);
+        expect(bebe.Link).toBe(Link);
+        expect(bebe.Metrics).toBe(Metrics);
         expect(bebe.ROOT_CONTEXT).toBe(ROOT_CONTEXT);
         expect(bebe.RootContext).toBe(RootContext);
         expect(bebe.createServiceKey).toBe(createServiceKey);
@@ -97,6 +104,17 @@ describe("package root exports", () => {
         );
     });
 
+    it("exposes the BDS Link transport through the internal tooling subpath", () => {
+        expect(Object.keys(internalLinkBds).sort()).toEqual(
+            [
+                "BdsLinkTransport",
+                "createBdsLinkTransport",
+                "createNativeBdsLinkHttpClient",
+                "installBdsLinkTransport",
+            ].sort(),
+        );
+    });
+
     it("exposes the maths subpath", () => {
         expect(maths.VoxelMap).toBeDefined();
         expect(maths.VoxelSet).toBeDefined();
@@ -104,7 +122,7 @@ describe("package root exports", () => {
         expect(maths.floodFillVoxels).toBeDefined();
     });
 
-    it("declares the root, bedrock, maths, catalog, and fishing exports", () => {
+    it("declares the root, bedrock, maths, catalog, fishing, and internal Link transport exports", () => {
         expect(packageJson.exports).toEqual({
             ".": {
                 types: "./lib/types/bebe-public.d.ts",
@@ -125,6 +143,10 @@ describe("package root exports", () => {
             "./features/fishing": {
                 types: "./lib/types/bebe-public.d.ts",
                 default: "./lib/features/fishing/index.js",
+            },
+            "./internal/link/bds": {
+                types: "./lib/types/bebe-public.d.ts",
+                default: "./lib/internal/link/bds.js",
             },
         });
     });
