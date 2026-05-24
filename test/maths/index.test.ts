@@ -2,46 +2,78 @@ import { describe, expect, it } from "vitest";
 import * as maths from "@blurengine/bebe/maths";
 import {
     AABB,
+    BlockExtent,
+    BoxExtent,
+    CylinderExtent,
     FACE_VOXEL_OFFSETS,
     Easings,
     Facing,
     FACING_OFFSETS,
     HORIZONTAL_FACING_OFFSETS,
+    InfiniteExtent,
     SURROUNDING_OFFSETS,
     SURROUNDING_VOXEL_OFFSETS,
+    SphereExtent,
+    TranslatedExtent,
+    UnionExtent,
     VERTICAL_FACING_OFFSETS,
+    VoxelExtent,
+    blockExtent,
+    boxExtent,
     createFacingVoxelOffsets,
     createSurroundingOffsets,
+    cylinderExtent,
     floodFillVoxelSet,
     floodFillVoxels,
     getVoxelKey,
+    infiniteExtent,
     parseVoxelKey,
+    sphereExtent,
+    translatedExtent,
     tweenNumber,
     clamp,
+    unionExtent,
     Vec2,
     Vec3,
+    voxelExtent,
 } from "@blurengine/bebe/maths";
 
 describe("maths barrel exports", () => {
     it("re-exports the public maths surface", () => {
         expect(maths.AABB).toBe(AABB);
+        expect(maths.BlockExtent).toBe(BlockExtent);
+        expect(maths.BoxExtent).toBe(BoxExtent);
+        expect(maths.CylinderExtent).toBe(CylinderExtent);
         expect(maths.Easings).toBe(Easings);
         expect(maths.Facing).toBe(Facing);
         expect(maths.FACING_OFFSETS).toBe(FACING_OFFSETS);
         expect(maths.HORIZONTAL_FACING_OFFSETS).toBe(HORIZONTAL_FACING_OFFSETS);
+        expect(maths.InfiniteExtent).toBe(InfiniteExtent);
         expect(maths.SURROUNDING_OFFSETS).toBe(SURROUNDING_OFFSETS);
         expect(maths.FACE_VOXEL_OFFSETS).toBe(FACE_VOXEL_OFFSETS);
         expect(maths.SURROUNDING_VOXEL_OFFSETS).toBe(SURROUNDING_VOXEL_OFFSETS);
+        expect(maths.SphereExtent).toBe(SphereExtent);
+        expect(maths.TranslatedExtent).toBe(TranslatedExtent);
+        expect(maths.UnionExtent).toBe(UnionExtent);
         expect(maths.VERTICAL_FACING_OFFSETS).toBe(VERTICAL_FACING_OFFSETS);
+        expect(maths.VoxelExtent).toBe(VoxelExtent);
+        expect(maths.blockExtent).toBe(blockExtent);
+        expect(maths.boxExtent).toBe(boxExtent);
         expect(maths.createFacingVoxelOffsets).toBe(createFacingVoxelOffsets);
         expect(maths.createSurroundingOffsets).toBe(createSurroundingOffsets);
+        expect(maths.cylinderExtent).toBe(cylinderExtent);
         expect(maths.floodFillVoxelSet).toBe(floodFillVoxelSet);
         expect(maths.floodFillVoxels).toBe(floodFillVoxels);
         expect(maths.getVoxelKey).toBe(getVoxelKey);
+        expect(maths.infiniteExtent).toBe(infiniteExtent);
         expect(maths.parseVoxelKey).toBe(parseVoxelKey);
+        expect(maths.sphereExtent).toBe(sphereExtent);
+        expect(maths.translatedExtent).toBe(translatedExtent);
         expect(maths.Vec2).toBe(Vec2);
         expect(maths.Vec3).toBe(Vec3);
         expect(maths.clamp).toBe(clamp);
         expect(maths.tweenNumber).toBe(tweenNumber);
+        expect(maths.unionExtent).toBe(unionExtent);
+        expect(maths.voxelExtent).toBe(voxelExtent);
     });
 });

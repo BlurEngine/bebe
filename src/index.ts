@@ -28,3 +28,50 @@ export type {
     MetricsSnapshot,
 } from "./metrics.js";
 export * from "./stagger.js";
+export {
+    ZONE_DRAFT_SAVE_EVENT,
+    ZoneDraft,
+    createZoneDraft,
+    requestZoneDraftSave,
+} from "./zones/draft.js";
+export type {
+    ZoneDraftChange,
+    ZoneDraftChangeKind,
+    ZoneDraftLookup,
+    ZoneDraftSavePayload,
+    ZoneDraftToPackOptions,
+} from "./zones/draft.js";
+export { Zones } from "./zones.js";
+export type {
+    CompileZonePackOptions,
+    NormalizeZonePackOptions,
+    ZoneAABBQuery,
+    ZoneBlockExtentDefinition,
+    ZoneBoxExtentDefinition,
+    ZoneCompiledDimensionIndex,
+    ZoneCompiledPack,
+    ZoneContainsQuery,
+    ZoneDefinition,
+    ZoneDimensionId,
+    ZoneDimensionInput,
+    ZoneDimensionLike,
+    ZoneEvent,
+    ZoneEventHandler,
+    ZoneEventKind,
+    ZoneEventReason,
+    ZoneHit,
+    ZoneId,
+    ZoneInfiniteExtentDefinition,
+    ZoneLocationSource,
+    ZoneLookup,
+    ZoneMembership,
+    ZonePack,
+    ZonePackScope,
+    ZonePointInput,
+    ZonePointQuery,
+    ZonePolygonExtentDefinition,
+    ZoneRegistration,
+    ZoneExtentDefinition,
+    ZoneWatchTarget,
+    ZonesService,
+} from "./zones.js";

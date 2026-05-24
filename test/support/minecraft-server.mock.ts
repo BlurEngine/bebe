@@ -8,6 +8,28 @@ type ScheduledJob = {
 type EventHandler<TEvent> = (event: TEvent) => void;
 type EntityRemoveBeforeEvent = { removedEntity: { id?: string } };
 type EntityRemoveHandler = EventHandler<EntityRemoveBeforeEvent>;
+type CustomCommand = {
+    readonly name: string;
+    readonly description: string;
+    readonly permissionLevel: CommandPermissionLevel;
+    readonly cheatsRequired?: boolean;
+    readonly mandatoryParameters?: readonly {
+        readonly name: string;
+        readonly type: CustomCommandParamType;
+    }[];
+    readonly optionalParameters?: readonly {
+        readonly name: string;
+        readonly type: CustomCommandParamType;
+    }[];
+};
+type CustomCommandCallback = (
+    origin: { readonly sourceEntity?: Entity },
+    ...args: unknown[]
+) => CustomCommandResult | undefined;
+type CustomCommandResult = {
+    readonly message?: string;
+    readonly status: CustomCommandStatus;
+};
 
 class MockEventSignal<TEvent> {
     readonly #handlers = new Set<EventHandler<TEvent>>();
@@ -36,6 +58,21 @@ let currentTick = 0;
 let nextHandle = 1;
 const jobs = new Map<number, ScheduledJob>();
 const entityRemoveHandlers = new Set<EntityRemoveHandler>();
+const startupEvent = new MockEventSignal<{
+    customCommandRegistry: {
+        registerCommand(
+            command: CustomCommand,
+            callback: CustomCommandCallback,
+        ): void;
+    };
+}>();
+const customCommands = new Map<
+    string,
+    {
+        readonly command: CustomCommand;
+        readonly callback: CustomCommandCallback;
+    }
+>();
 const afterEvents = {
     entityItemPickup: new MockEventSignal<{
         entity: Entity;
@@ -55,6 +92,13 @@ const afterEvents = {
     itemUse: new MockEventSignal<{
         itemStack?: ItemStack;
         source: Player;
+    }>(),
+    playerInteractWithBlock: new MockEventSignal<{
+        block: {
+            dimension: Dimension;
+            location: Vector3;
+        };
+        player: Player;
     }>(),
 };
 let allPlayers: Player[] = [];
@@ -95,6 +139,9 @@ export const system = {
     get currentTick() {
         return currentTick;
     },
+    beforeEvents: {
+        startup: startupEvent,
+    },
     run(callback: () => void) {
         return schedule("once", callback, 1);
     },
@@ -125,6 +172,23 @@ export enum Direction {
     South = "South",
     Up = "Up",
     West = "West",
+}
+
+export enum CommandPermissionLevel {
+    Any = 0,
+    GameDirectors = 1,
+    Admin = 2,
+    Host = 3,
+    Owner = 4,
+}
+
+export enum CustomCommandParamType {
+    String = "String",
+}
+
+export enum CustomCommandStatus {
+    Success = 0,
+    Failure = 1,
 }
 
 export type Vector3 = {
@@ -252,11 +316,28 @@ export const minecraftMockControl = {
     ) {
         afterEvents[eventName].emit(event as never);
     },
+    emitStartup() {
+        startupEvent.emit({
+            customCommandRegistry: {
+                registerCommand(command, callback) {
+                    customCommands.set(command.name, {
+                        command,
+                        callback,
+                    });
+                },
+            },
+        });
+    },
+    getCustomCommand(name: string) {
+        return customCommands.get(name);
+    },
     reset() {
         currentTick = 0;
         nextHandle = 1;
         jobs.clear();
         entityRemoveHandlers.clear();
+        startupEvent.reset();
+        customCommands.clear();
         allPlayers = [];
         for (const signal of Object.values(afterEvents)) {
             signal.reset();

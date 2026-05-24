@@ -26,7 +26,11 @@
       "@blurengine/bebe/catalog": ["./src/catalog/index.ts"],
       "@blurengine/bebe/features/fishing": ["./src/features/fishing/index.ts"],
       "@blurengine/bebe/internal/link/bds": ["./src/internal/link/bds.ts"],
-      "@blurengine/bebe/maths": ["./src/maths/index.ts"]
+      "@blurengine/bebe/internal/zones/editor": [
+        "./src/internal/zones/editor.ts"
+      ],
+      "@blurengine/bebe/maths": ["./src/maths/index.ts"],
+      "@blurengine/bebe/tooling/node": ["./src/tooling/node.ts"]
     }
   }
 }

@@ -6,11 +6,11 @@ Game engine library for Minecraft Bedrock scripting.
 
 ## Packages
 
-- `@blurengine/bebe`: engine lifecycle, ownership, runtime scheduling primitives, Link, and Metrics
+- `@blurengine/bebe`: engine lifecycle, ownership, runtime scheduling primitives, Zones, Link, and Metrics
 - `@blurengine/bebe/bedrock`: Bedrock edge helpers for block, adjacency, block-traversal, slot, item stack, item entity, and durability work
 - `@blurengine/bebe/catalog`: immutable block catalogs plus the built-in vanilla preset and tag-traversal helpers
 - `@blurengine/bebe/features/fishing`: opt-in derived events around vanilla fishing behaviour
-- `@blurengine/bebe/maths`: vectors, facings, AABBs, voxel/grid helpers, tweens, and numeric helpers
+- `@blurengine/bebe/maths`: vectors, facings, AABBs, extents, voxel/grid helpers, tweens, and numeric helpers
 - `npm install @blurengine/bebe @minecraft/server`
 
 ## Quick Start
@@ -37,18 +37,20 @@ tweenNumber(ctx, {
 - Keep timers, subscriptions, spawned child scopes, and other runtime work owned by one `Context`.
 - Expose simple derived event sources through `EventSignal` instead of repeating local emitter code in each feature.
 - Provide small runtime helpers for staging owned work over ticks, including grouped schedules derived from flat item lists.
+- Provide the root-level `Zones` singleton for registering, querying, and watching dimension-partitioned extents without making extents aware of dimensions, worlds, entities, or events.
 - Keep Bedrock-specific friction at the edge through reusable helpers instead of repeating the same safety, adjacency, traversal, and fallback code inside gameplay features.
 - Provide an opt-in block catalog surface so Bedrock features can query curated vanilla block categories, collect tags from subsets, and build small derived indexes without carrying giant local tables or repetitive local query helpers.
 - Provide opt-in feature modules for common derived Bedrock behaviours, starting with vanilla fishing events.
 - Provide a local Link bridge surface for tooling messages between BDS runtime code and `blr`, while staying no-op when unavailable.
 - Provide Prometheus-style runtime metrics for counters, gauges, histograms, labels, and plaintext dashboard snapshots.
-- Provide a separate maths surface for vector, facing, AABB, voxel/grid, voxel collections, tween, and scalar helpers without making the root package feel overloaded.
+- Provide a separate maths surface for vector, facing, AABB, extent, voxel/grid, voxel collection, tween, and scalar helpers without making the root package feel overloaded.
 
 ## Documentation
 
 - [Docs Index](./docs/README.md)
 - [Context Guide](./docs/guides/context.md)
 - [Stagger Guide](./docs/guides/stagger.md)
+- [Zones Guide](./docs/guides/zones.md)
 - [Bedrock Guide](./docs/guides/bedrock.md)
 - [Catalog Guide](./docs/guides/catalog.md)
 - [Fishing Guide](./docs/guides/fishing.md)

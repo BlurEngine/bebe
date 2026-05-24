@@ -9,6 +9,7 @@ It provides:
 - vector classes for authored code
 - facing helpers for block-adjacent offsets
 - AABB utilities for spatial work
+- extent primitives for reusable area and volume definitions
 - voxel/grid helpers for location-first collections, stable keys, and breadth-first traversal
 - tween helpers for tick-based interpolation
 - scalar helpers for common numeric jobs
@@ -17,6 +18,7 @@ It provides:
 
 - authored gameplay code needs readable vector or AABB operations
 - code needs a stable vocabulary for block-adjacent offsets
+- code needs to express a reusable area, volume, or spatial membership rule
 - code needs voxel collections, stable location keys, or breadth-first grid traversal
 - a feature needs tweening over Bedrock ticks
 - scalar helper functions are enough and a full class wrapper would be unnecessary
@@ -28,6 +30,8 @@ The package has one main split:
 
 - `Vec2`, `Vec3`, and `AABB` are the primary authored APIs
 - `Facing` is the primary authored term for Bedrock's block-adjacent `Direction` enum
+- extents describe pure spatial membership and reduction over the existing
+  `Vec3`, `AABB`, and voxel vocabulary
 - voxel/grid helpers live beside the main maths types because they are spatial
   traversal helpers over the same `Vec3` model
 - raw utility functions exist for Bedrock interop, scalar queries, and low-allocation edge work
@@ -123,6 +127,65 @@ The surface still uses `Vec3Like` inputs and `Vec3` runtime outputs so it
 composes naturally with the rest of the maths layer. When code needs to offset
 one voxel location, prefer `new Vec3(location).add(offset)` directly.
 
+### Extents
+
+Extents are pure spatial primitives for authored gameplay space.
+
+They answer questions such as:
+
+- does this point belong to this area?
+- what finite bounds does this area have?
+- what approximate volume can be reported?
+- which integer blocks does this area reduce to?
+- can a broad-phase AABB be classified as inside, outside, or intersecting?
+
+The first extent shapes are:
+
+- `BoxExtent`, backed by `AABB`
+- `BlockExtent`, one half-open integer block cell
+- `CylinderExtent`, a vertical cylinder on the `y` axis
+- `SphereExtent`, a Euclidean sphere
+- `PolygonExtent`, a simple vertical prism from a 2D XZ polygon and y min/max
+- `VoxelExtent`, backed by exact voxel membership
+- `UnionExtent`, an OR-composition over child extents
+- `TranslatedExtent`, a child extent evaluated at an offset
+- `InfiniteExtent`, an unbounded extent that contains all finite points
+
+Extents deliberately do not know about dimensions, worlds, entities, ticks, or
+event listeners. Those responsibilities belong to zone registries and monitors
+built above the maths layer. The root package `Zones` singleton is the first
+such runtime layer for registering, querying, and watching collections of
+extents.
+
+`BlockExtent` uses half-open cell membership: the minimum block corner is
+included, and the next block boundary is excluded. A block at `{ x: 1, y: 2,
+z: 3 }` contains `{ x: 1.5, y: 2.5, z: 3.5 }`, but not `{ x: 2, y: 2, z: 3 }`.
+This lets adjacent block cells compose without double-counting shared faces.
+
+`InfiniteExtent` is valid for whole-space definitions, but it has no finite
+`bounds()`, `volume()`, `sample()`, or block iteration. Consumers that need a
+world or dimension must attach that meaning outside the extent itself.
+
+`PolygonExtent` is deliberately simple: it is a 2D polygon on the XZ plane with
+finite y min/max. It is intended for hand-authored JSON and in-game editing
+tools that need irregular but understandable regions without introducing full
+3D mesh or hole semantics.
+
+For continuous shapes such as boxes, cylinders, spheres, and translated shapes,
+`blocks()` yields integer block cells that intersect the extent. It does not use
+centre-point containment as the default reduction rule. This keeps block
+reduction conservative for future indexing and avoids losing cells that touch an
+extent boundary.
+
+`UnionExtent.volume()` only reports a number when child volumes are known and
+their bounds cannot overlap. If children may overlap, it returns `undefined`
+rather than publishing a misleading sum.
+
+Built-in extents expose conservative broad-phase helpers. In particular,
+`classifyAABB(...)` only returns `"inside"` when the shape can prove the whole
+box is contained. When that proof is not cheap or not possible, the extent
+returns `"intersects"` so callers can fall back to exact checks.
+
 ### Tweens
 
 Tween helpers use an explicit scheduler.
@@ -172,6 +235,14 @@ Prefer the voxel helpers when:
 - you need value-based voxel collections or stable keys for integer grid locations
 - you are walking connected regions in block space
 - you want breadth-first depth information during traversal
+
+Prefer extents when:
+
+- you want one reusable definition of an area or volume
+- multiple systems need to consume the same spatial rule
+- code needs a shape to provide containment, bounds, sampling, or block
+  reduction
+- you are preparing gameplay code for zone registration or monitoring
 
 Prefer raw helpers when:
 

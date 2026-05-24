@@ -35,6 +35,18 @@ export default defineConfig({
                 ),
             },
             {
+                find: /^@blurengine\/bebe\/internal\/zones\/editor$/,
+                replacement: fileURLToPath(
+                    new URL("./src/internal/zones/editor.ts", import.meta.url),
+                ),
+            },
+            {
+                find: /^@blurengine\/bebe\/tooling\/node$/,
+                replacement: fileURLToPath(
+                    new URL("./src/tooling/node.ts", import.meta.url),
+                ),
+            },
+            {
                 find: /^@blurengine\/bebe$/,
                 replacement: fileURLToPath(
                     new URL("./src/index.ts", import.meta.url),

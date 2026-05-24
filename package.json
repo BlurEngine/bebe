@@ -45,6 +45,14 @@
     "./internal/link/bds": {
       "types": "./lib/types/bebe-public.d.ts",
       "default": "./lib/internal/link/bds.js"
+    },
+    "./internal/zones/editor": {
+      "types": "./lib/types/bebe-public.d.ts",
+      "default": "./lib/internal/zones/editor.js"
+    },
+    "./tooling/node": {
+      "types": "./lib/types/bebe-public.d.ts",
+      "default": "./lib/tooling/node.js"
     }
   },
   "type": "module",

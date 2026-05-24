@@ -1,4 +1,5 @@
 export * from "./aabb.js";
+export * from "./extents.js";
 export * from "./facing.js";
 export * from "./tween.js";
 export * from "./util.js";
