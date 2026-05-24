@@ -9,7 +9,7 @@ Counters only increase and should end in `_total`:
 ```ts
 import { Metrics } from "@blurengine/bebe";
 
-const catches = Metrics.counter("mpl_fish_caught_total", {
+const catches = Metrics.counter("example_fish_caught_total", {
   help: "Total fish caught by players.",
   labelNames: ["rarity"],
 });
@@ -23,13 +23,13 @@ catches.add(3, { rarity: "rare" });
 Gauges represent current values and can move up or down:
 
 ```ts
-const activePets = Metrics.gauge("mpl_active_pets", {
-  help: "Current active pet count.",
+const activeSessions = Metrics.gauge("example_active_sessions", {
+  help: "Current active session count.",
 });
 
-activePets.set(12);
-activePets.inc();
-activePets.dec();
+activeSessions.set(12);
+activeSessions.inc();
+activeSessions.dec();
 ```
 
 ## Histograms
@@ -37,7 +37,7 @@ activePets.dec();
 Histograms record observations as buckets, sum, and count. Durations should normally use seconds:
 
 ```ts
-const tickWork = Metrics.histogram("mpl_tick_work_seconds", {
+const tickWork = Metrics.histogram("example_tick_work_seconds", {
   help: "Time spent running project tick work.",
 });
 
