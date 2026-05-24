@@ -19,6 +19,11 @@ This file applies only to agents working in the `bebe/` repository.
 - Do not add unconditional console noise in runtime paths. Debug output must be opt-in and routed through an explicit debug or log mechanism.
 - Treat `Context` as lifecycle and resource ownership infrastructure, not a dumping ground for unrelated feature state. New responsibilities should usually become services or standalone primitives before they become `Context` features.
 
+## Git Safety Rules
+
+- Do not stage, commit, amend, rebase, reset, force-push, or push unless the user explicitly asks for that exact Git action in the current task. Do not infer permission from broad instructions such as "proceed".
+- Before any requested Git action, inspect the working tree and separate user or unrelated changes from the requested change. Preserve unrelated changes in the working tree unless the user explicitly asks to include them.
+
 ## Framework Design Rules
 
 - Prefer extracting reusable primitives over reimplementing the same pattern inside feature files. If two systems need local events, polling, or composition, extend the shared primitives first.
