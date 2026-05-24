@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0
+
+### Minor Changes
+
+- [`885e8db`](https://github.com/BlurEngine/bebe/commit/885e8dbae1024c0d00c47ae6813da429de9521c8) Thanks [@SupaHam](https://github.com/SupaHam)! - Add extents, the Zones runtime, zone pack tooling, and internal zone editor hooks for development workflows.
+
+- [`426a173`](https://github.com/BlurEngine/bebe/commit/426a1738399ab7e4cb5a72f8a8a3516afcda7b3b) Thanks [@SupaHam](https://github.com/SupaHam)! - Add Link and Metrics bridge APIs plus the BDS Link transport used by local-server integrations.
+
 ## 0.5.1
 
 ### Patch Changes
