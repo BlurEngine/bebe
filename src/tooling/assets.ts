@@ -27,7 +27,16 @@ export type BebeAssetCompilerInput = {
 
 export type BebeAssetCompilerResult = {
     readonly output?: unknown;
+    readonly artifacts?: readonly BebeAssetCompilerArtifact[];
     readonly diagnostics?: readonly BebeToolingDiagnostic[];
+};
+
+export type BebeAssetCompilerArtifactTarget = "behaviorPack" | "resourcePack";
+
+export type BebeAssetCompilerArtifact = {
+    readonly target: BebeAssetCompilerArtifactTarget;
+    readonly outputPath: string;
+    readonly output: unknown;
 };
 
 export type BebeAssetBootstrapInput = {

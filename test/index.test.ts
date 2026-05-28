@@ -15,6 +15,7 @@ import {
     Link,
     Metrics,
     ROOT_CONTEXT,
+    RenderAnchors,
     RootContext,
     ZONE_DRAFT_SAVE_EVENT,
     ZoneDraft,
@@ -42,6 +43,7 @@ describe("package root exports", () => {
                 "Link",
                 "Metrics",
                 "ROOT_CONTEXT",
+                "RenderAnchors",
                 "RootContext",
                 "ZONE_DRAFT_SAVE_EVENT",
                 "ZoneDraft",
@@ -65,6 +67,7 @@ describe("package root exports", () => {
         expect(bebe.Link).toBe(Link);
         expect(bebe.Metrics).toBe(Metrics);
         expect(bebe.ROOT_CONTEXT).toBe(ROOT_CONTEXT);
+        expect(bebe.RenderAnchors).toBe(RenderAnchors);
         expect(bebe.RootContext).toBe(RootContext);
         expect(bebe.ZONE_DRAFT_SAVE_EVENT).toBe(ZONE_DRAFT_SAVE_EVENT);
         expect(bebe.ZoneDraft).toBe(ZoneDraft);
@@ -145,19 +148,31 @@ describe("package root exports", () => {
     it("exposes node-only Bebe tooling through its own subpath", () => {
         expect(Object.keys(toolingNode).sort()).toEqual(
             [
+                "DEFAULT_RENDER_ANCHOR_DIMENSION",
+                "DEFAULT_RENDER_ANCHOR_REPOSITION_THRESHOLD",
+                "DEFAULT_RENDER_ANCHOR_SEARCH_RADIUS",
                 "DEFAULT_ZONE_COMPILED_CELL_SIZE",
                 "DEFAULT_ZONE_COMPILED_MAX_CELLS_PER_ZONE",
+                "GENERATED_RENDER_ANCHORS_FILE",
                 "GENERATED_ZONES_FILE",
+                "PROJECT_RENDER_ANCHORS_FILE",
                 "PROJECT_ZONES_FILE",
                 "ZONE_COMPILED_FORMAT_VERSION",
                 "ZONE_DRAFT_SAVE_EVENT",
+                "compileRenderAnchorPack",
                 "compileZonePack",
                 "createBebeTooling",
+                "createDefaultRenderAnchorOutputEntity",
+                "createRenderAnchorsAssetCompiler",
                 "createZonesAssetCompiler",
+                "normalizeRenderAnchorDefinition",
+                "normalizeRenderAnchorPack",
                 "normalizeZoneCompiledPack",
                 "normalizeZoneDefinition",
                 "normalizeZoneExtentDefinition",
                 "normalizeZonePack",
+                "renderAnchorsAssetCompiler",
+                "sanitizeRenderAnchorName",
                 "validateZoneReferences",
                 "zonesAssetCompiler",
             ].sort(),

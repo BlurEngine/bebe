@@ -9,6 +9,7 @@ These are the canonical guides for `@blurengine/bebe` and its public subpaths.
 - [Stagger Guide](./guides/stagger.md)
 - [Zones Guide](./guides/zones.md)
 - [Bedrock Guide](./guides/bedrock.md)
+- [Techniques Guide](./guides/techniques.md)
 - [Catalog Guide](./guides/catalog.md)
 - [Fishing Guide](./guides/fishing.md)
 - [Link Guide](./guides/link.md)
@@ -25,6 +26,7 @@ These are the canonical guides for `@blurengine/bebe` and its public subpaths.
 - Read Stagger Guide when you want to stage owned work across ticks.
 - Read Zones Guide when you want to register extents, query named areas, or watch zone membership by dimension.
 - Read Bedrock Guide when you want the engine to absorb API friction at the Bedrock edge.
+- Read Techniques Guide when you want goal-first Minecraft Bedrock patterns that use Bebe-owned runtime work.
 - Read Catalog Guide when you want immutable block categories, vanilla block tags, or overlay-driven catalog customization.
 - Read Fishing Guide when you want derived events around vanilla fishing casts, bites, reels, and catches.
 - Read Link Guide when you want local tooling messages between BDS runtime code and `blr`.
@@ -42,7 +44,9 @@ These docs cover:
 - derived local events through `EventSignal`
 - root-level staggered runtime work
 - the root-level `Zones` singleton for dimension-partitioned area lookup and entity watching
+- the root-level `RenderAnchors` singleton for Bebe-owned distant entity-like visuals and carrier cleanup
 - the Bedrock edge helpers under `@blurengine/bebe/bedrock`
+- goal-first Minecraft Bedrock techniques that use Bebe-owned runtime work
 - the block catalog helpers and vanilla preset under `@blurengine/bebe/catalog`
 - the fishing feature helpers under `@blurengine/bebe/features/fishing`
 - the local tooling bridge exposed as `Link`
