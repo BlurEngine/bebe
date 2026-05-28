@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0
+
+### Minor Changes
+
+- [`c8c321d`](https://github.com/BlurEngine/bebe/commit/c8c321d24122bf0d0e94b473b3b78acb1b8c3a6e) Thanks [@SupaHam](https://github.com/SupaHam)! - Add RenderAnchors runtime and tooling support for Bebe-owned distant entity visuals.
+
 ## 0.6.0
 
 ### Minor Changes
