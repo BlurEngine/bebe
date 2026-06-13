@@ -33,6 +33,7 @@ const packageJsonPath = path.resolve(import.meta.dirname, "..", "package.json");
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
     exports: Record<string, { default: string; types: string }>;
 };
+const srcRoot = path.resolve(import.meta.dirname, "..", "src");
 
 describe("package root exports", () => {
     it("re-exports the runtime ownership surface", () => {
@@ -79,6 +80,35 @@ describe("package root exports", () => {
         expect(bebe.stagger).toBe(stagger);
         expect(bebe.staggerByGroup).toBe(staggerByGroup);
         expect(bebe.staggerGroups).toBe(staggerGroups);
+    });
+
+    it("keeps render-anchor spatial types on the shared maths vocabulary", () => {
+        const publicSource = fs.readFileSync(
+            path.join(srcRoot, "index.ts"),
+            "utf8",
+        );
+        const toolingSource = fs.readFileSync(
+            path.join(srcRoot, "tooling", "node.ts"),
+            "utf8",
+        );
+        const runtimeSource = fs.readFileSync(
+            path.join(srcRoot, "render-anchors.ts"),
+            "utf8",
+        );
+        const definitionSource = fs.readFileSync(
+            path.join(srcRoot, "render-anchors", "definitions.ts"),
+            "utf8",
+        );
+
+        expect(
+            `${publicSource}\n${toolingSource}\n${runtimeSource}\n${definitionSource}`,
+        ).not.toMatch(
+            /RenderAnchor(?:Location|BlockLocation|Vec3Definition)\b/,
+        );
+        expect(runtimeSource).toContain(
+            'import { Vec3, type Vec3Init, type Vec3Like } from "./maths/vec3.js";',
+        );
+        expect(definitionSource).toMatch(/type Vec3Init,\s*type Vec3Like/);
     });
 
     it("exposes the bedrock subpath", () => {

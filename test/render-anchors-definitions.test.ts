@@ -9,6 +9,7 @@ import {
     createRenderAnchorsAssetCompiler,
     normalizeRenderAnchorPack,
 } from "@blurengine/bebe/tooling/node";
+import { Vec3 } from "@blurengine/bebe/maths";
 
 describe("render anchor definitions", () => {
     it("normalizes a minimal existing-entity anchor with convenience defaults", () => {
@@ -40,6 +41,20 @@ describe("render anchor definitions", () => {
                 },
             ],
         });
+    });
+
+    it("accepts the shared Vec3 maths model for anchor locations", () => {
+        expect(
+            normalizeRenderAnchorPack({
+                anchors: [
+                    {
+                        id: "harbour.crane",
+                        entity: "demo:crane",
+                        location: new Vec3(320, 80, -48),
+                    },
+                ],
+            }).anchors[0]?.location,
+        ).toEqual({ x: 320, y: 80, z: -48 });
     });
 
     it("keeps explicit Minecraft-shaped property definitions", () => {

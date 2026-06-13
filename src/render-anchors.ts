@@ -1,5 +1,6 @@
 import { world } from "@minecraft/server";
 import { Context } from "./context.js";
+import { Vec3, type Vec3Init, type Vec3Like } from "./maths/vec3.js";
 import {
     normalizeRenderAnchorPack,
     type RenderAnchorCompiledDefinition,
@@ -23,7 +24,6 @@ export type {
     RenderAnchorPropertyDefinition,
     RenderAnchorPropertyType,
     RenderAnchorPropertyValue,
-    RenderAnchorVec3Definition,
 } from "./render-anchors/definitions.js";
 
 export type RenderAnchorState = Record<string, RenderAnchorPropertyValue>;
@@ -31,9 +31,7 @@ export type RenderAnchorStatePatch = Record<string, RenderAnchorPropertyValue>;
 
 export type RenderAnchorDimensionLike = {
     readonly id: string;
-    getBlock?(
-        location: RenderAnchorBlockLocation,
-    ): RenderAnchorBlockLike | undefined;
+    getBlock?(location: Vec3Init): RenderAnchorBlockLike | undefined;
     /**
      * Optional dimension query used for best-effort stale carrier cleanup before
      * replacement carriers spawn.
@@ -43,7 +41,7 @@ export type RenderAnchorDimensionLike = {
     ): Iterable<RenderAnchorEntityLike>;
     spawnEntity?(
         identifier: string,
-        location: RenderAnchorLocation,
+        location: Vec3Init,
     ): RenderAnchorEntityLike;
 };
 
@@ -58,33 +56,21 @@ export type RenderAnchorBlockLike = {
     readonly isAir?: boolean | (() => boolean);
 };
 
-export type RenderAnchorBlockLocation = {
-    readonly x: number;
-    readonly y: number;
-    readonly z: number;
-};
-
-export type RenderAnchorLocation = {
-    readonly x: number;
-    readonly y: number;
-    readonly z: number;
-};
-
 export type RenderAnchorObserver = {
     readonly id: string;
     readonly dimension: string | RenderAnchorDimensionLike;
-    readonly location: RenderAnchorLocation;
+    readonly location: Vec3Like;
     readonly isValid?: boolean | (() => boolean);
 };
 
 export type RenderAnchorEntityLike = {
     readonly id?: string;
     isValid?: boolean | (() => boolean);
-    location?: RenderAnchorLocation;
+    location?: Vec3Init;
     remove?(): void;
     setProperty(identifier: string, value: RenderAnchorPropertyValue): void;
     teleport?(
-        location: RenderAnchorLocation,
+        location: Vec3Init,
         options?: { readonly keepVelocity?: boolean },
     ): void;
 };
@@ -104,7 +90,7 @@ export type RenderAnchorTrackInstanceInput = {
 export type RenderAnchorSpawnInput = {
     readonly anchor: RenderAnchorCompiledDefinition;
     readonly observer: RenderAnchorObserver;
-    readonly location: RenderAnchorLocation;
+    readonly location: Vec3Init;
 };
 
 export type RenderAnchorMoveInput = RenderAnchorSpawnInput & {
@@ -160,7 +146,7 @@ export interface RenderAnchorsService {
 type RenderAnchorInstanceRecord = RenderAnchorInstance & {
     readonly key: string;
     readonly owned: boolean;
-    lastObserverLocation?: RenderAnchorLocation;
+    lastObserverLocation?: Vec3Init;
 };
 
 class RenderAnchorsRuntime implements RenderAnchorsService {
@@ -354,7 +340,9 @@ class RenderAnchorsRuntime implements RenderAnchorsService {
                         observerId: observer.id,
                         key,
                         owned: true,
-                        lastObserverLocation: observer.location,
+                        lastObserverLocation: new Vec3(
+                            observer.location,
+                        ).toObject(),
                     };
                     this.#instances.set(key, record);
                     applyState(entity, this.#states.get(anchor.id) ?? {});
@@ -373,7 +361,9 @@ class RenderAnchorsRuntime implements RenderAnchorsService {
                         entity: record.entity,
                         location,
                     });
-                    record.lastObserverLocation = observer.location;
+                    record.lastObserverLocation = new Vec3(
+                        observer.location,
+                    ).toObject();
                 }
             }
         }
@@ -677,7 +667,7 @@ function spawnRenderAnchorEntity(
     options: RenderAnchorStartOptions,
     anchor: RenderAnchorCompiledDefinition,
     observer: RenderAnchorObserver,
-    location: RenderAnchorLocation,
+    location: Vec3Init,
 ): RenderAnchorEntityLike | undefined {
     if (options.spawnEntity) {
         return options.spawnEntity({ anchor, observer, location });
@@ -716,7 +706,7 @@ function moveRenderAnchorEntity(
 function placeNearObserver(
     anchor: RenderAnchorCompiledDefinition,
     observer: RenderAnchorObserver,
-): RenderAnchorLocation {
+): Vec3Init {
     if (anchor.placement.strategy === "nearestAir") {
         const dimension =
             typeof observer.dimension === "string"
@@ -734,13 +724,11 @@ function placeNearObserver(
         }
     }
 
-    return cloneLocation(observer.location);
+    return new Vec3(observer.location).toObject();
 }
 
 type RenderAnchorBlockOffset = {
-    readonly x: number;
-    readonly y: number;
-    readonly z: number;
+    readonly offset: Vec3;
     readonly distanceSquared: number;
 };
 
@@ -748,23 +736,15 @@ const airSearchOffsets = new Map<number, readonly RenderAnchorBlockOffset[]>();
 
 function findNearestAirLocation(
     dimension: RenderAnchorDimensionLike,
-    location: RenderAnchorLocation,
+    location: Vec3Like,
     searchRadius: number,
-): RenderAnchorLocation | undefined {
-    const base = floorLocation(location);
-    for (const offset of getAirSearchOffsets(searchRadius)) {
-        const blockLocation = {
-            x: base.x + offset.x,
-            y: base.y + offset.y,
-            z: base.z + offset.z,
-        };
+): Vec3Init | undefined {
+    const base = new Vec3(location).floor();
+    for (const { offset } of getAirSearchOffsets(searchRadius)) {
+        const blockLocation = base.add(offset).toObject();
         const block = getRenderAnchorBlock(dimension, blockLocation);
         if (block && isRenderAnchorAirBlock(block)) {
-            return {
-                x: blockLocation.x + 0.5,
-                y: blockLocation.y,
-                z: blockLocation.z + 0.5,
-            };
+            return new Vec3(blockLocation).add({ x: 0.5, z: 0.5 }).toObject();
         }
     }
 
@@ -788,7 +768,10 @@ function getAirSearchOffsets(
             for (let z = -limit; z <= limit; z++) {
                 const distanceSquared = x * x + y * y + z * z;
                 if (distanceSquared <= searchRadiusSquared) {
-                    offsets.push({ x, y, z, distanceSquared });
+                    offsets.push({
+                        offset: new Vec3(x, y, z),
+                        distanceSquared,
+                    });
                 }
             }
         }
@@ -802,19 +785,21 @@ function compareAirSearchOffsets(
     left: RenderAnchorBlockOffset,
     right: RenderAnchorBlockOffset,
 ): number {
+    const leftOffset = left.offset;
+    const rightOffset = right.offset;
     return (
         left.distanceSquared - right.distanceSquared ||
-        Math.abs(left.y) - Math.abs(right.y) ||
-        Math.abs(left.x) - Math.abs(right.x) ||
-        left.x - right.x ||
-        Math.abs(left.z) - Math.abs(right.z) ||
-        left.z - right.z
+        Math.abs(leftOffset.y) - Math.abs(rightOffset.y) ||
+        Math.abs(leftOffset.x) - Math.abs(rightOffset.x) ||
+        leftOffset.x - rightOffset.x ||
+        Math.abs(leftOffset.z) - Math.abs(rightOffset.z) ||
+        leftOffset.z - rightOffset.z
     );
 }
 
 function getRenderAnchorBlock(
     dimension: RenderAnchorDimensionLike,
-    location: RenderAnchorBlockLocation,
+    location: Vec3Init,
 ): RenderAnchorBlockLike | undefined {
     try {
         return dimension.getBlock?.(location);
@@ -834,34 +819,18 @@ function isRenderAnchorAirBlock(block: RenderAnchorBlockLike): boolean {
     }
 }
 
-function floorLocation(
-    location: RenderAnchorLocation,
-): RenderAnchorBlockLocation {
-    return {
-        x: Math.floor(location.x),
-        y: Math.floor(location.y),
-        z: Math.floor(location.z),
-    };
-}
-
-function cloneLocation(location: RenderAnchorLocation): RenderAnchorLocation {
-    return { x: location.x, y: location.y, z: location.z };
-}
-
 function shouldMove(
     record: RenderAnchorInstanceRecord,
-    location: RenderAnchorLocation,
+    location: Vec3Like,
     threshold: number,
 ): boolean {
+    const current = new Vec3(location);
     const previous = record.lastObserverLocation;
     if (!previous) {
-        record.lastObserverLocation = location;
+        record.lastObserverLocation = current.toObject();
         return false;
     }
-    const dx = location.x - previous.x;
-    const dy = location.y - previous.y;
-    const dz = location.z - previous.z;
-    return dx * dx + dy * dy + dz * dz >= threshold * threshold;
+    return current.distanceSquared(previous) >= threshold * threshold;
 }
 
 function isValid(target: {

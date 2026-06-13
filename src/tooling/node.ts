@@ -77,7 +77,6 @@ export type {
     RenderAnchorPropertyDefinition,
     RenderAnchorPropertyType,
     RenderAnchorPropertyValue,
-    RenderAnchorVec3Definition,
 } from "../render-anchors/definitions.js";
 export {
     createRenderAnchorsAssetCompiler,

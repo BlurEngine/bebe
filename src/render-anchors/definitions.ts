@@ -1,17 +1,16 @@
+import {
+    Vec3,
+    isVec3Like,
+    type Vec3Init,
+    type Vec3Like,
+} from "../maths/vec3.js";
+
 export const PROJECT_RENDER_ANCHORS_FILE = "render-anchors.json";
 export const GENERATED_RENDER_ANCHORS_FILE =
     "generated/bebe/render-anchors.json";
 export const DEFAULT_RENDER_ANCHOR_DIMENSION = "minecraft:overworld";
 export const DEFAULT_RENDER_ANCHOR_SEARCH_RADIUS = 16;
 export const DEFAULT_RENDER_ANCHOR_REPOSITION_THRESHOLD = 16;
-
-export type RenderAnchorVec3Definition =
-    | readonly [number, number, number]
-    | {
-          readonly x: number;
-          readonly y: number;
-          readonly z: number;
-      };
 
 export type RenderAnchorPlacementStrategy = "nearestAir";
 export type RenderAnchorMovementDriver = "auto" | "packet";
@@ -48,7 +47,7 @@ export type RenderAnchorDefinition = {
     readonly entity: string;
     readonly outputEntity?: string;
     readonly dimension?: string;
-    readonly location: RenderAnchorVec3Definition;
+    readonly location: Vec3Like;
     readonly placement?: RenderAnchorPlacementDefinition;
     readonly properties?: RenderAnchorPropertiesDefinition;
 };
@@ -58,11 +57,7 @@ export type RenderAnchorCompiledDefinition = {
     readonly entity: string;
     readonly outputEntity: string;
     readonly dimension: string;
-    readonly location: {
-        readonly x: number;
-        readonly y: number;
-        readonly z: number;
-    };
+    readonly location: Vec3Init;
     readonly placement: RenderAnchorNormalizedPlacement;
     readonly properties: RenderAnchorPropertiesDefinition;
 };
@@ -354,28 +349,12 @@ function expectNonNegativeFiniteNumber(input: unknown, source: string): number {
     return value;
 }
 
-function expectVec3(
-    input: unknown,
-    source: string,
-): { readonly x: number; readonly y: number; readonly z: number } {
-    let x: number;
-    let y: number;
-    let z: number;
-    if (Array.isArray(input)) {
-        if (input.length !== 3) {
-            throw new Error(`${source} must have exactly 3 components.`);
-        }
-        [x, y, z] = input.map((value, index) =>
-            expectFiniteNumber(value, `${source}[${index}]`),
-        );
-    } else {
-        const record = expectRecord(input, source);
-        x = expectFiniteNumber(record.x, `${source}.x`);
-        y = expectFiniteNumber(record.y, `${source}.y`);
-        z = expectFiniteNumber(record.z, `${source}.z`);
+function expectVec3(input: unknown, source: string): Vec3Init {
+    if (!isVec3Like(input)) {
+        throw new Error(`${source} must be a finite Vec3-like value.`);
     }
 
-    return { x, y, z };
+    return new Vec3(input).toObject();
 }
 
 function expectStringArray(input: unknown, source: string): readonly string[] {

@@ -38,7 +38,6 @@ export { RenderAnchors } from "./render-anchors.js";
 export type {
     NormalizeRenderAnchorPackOptions,
     RenderAnchorBlockLike,
-    RenderAnchorBlockLocation,
     RenderAnchorCompiledDefinition,
     RenderAnchorCompiledPack,
     RenderAnchorDefinition,
@@ -47,7 +46,6 @@ export type {
     RenderAnchorEntityQuery,
     RenderAnchorExistingCarriersInput,
     RenderAnchorInstance,
-    RenderAnchorLocation,
     RenderAnchorMovementDriver,
     RenderAnchorMoveInput,
     RenderAnchorNormalizedPlacement,
@@ -64,7 +62,6 @@ export type {
     RenderAnchorState,
     RenderAnchorStatePatch,
     RenderAnchorTrackInstanceInput,
-    RenderAnchorVec3Definition,
     RenderAnchorsService,
 } from "./render-anchors.js";
 export type {
