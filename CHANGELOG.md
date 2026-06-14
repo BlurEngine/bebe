@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0
+
+### Minor Changes
+
+- [`88a02c0`](https://github.com/BlurEngine/bebe/commit/88a02c0906518c2a8a285cd726447581e3810ed7) Thanks [@SupaHam](https://github.com/SupaHam)! - Add BAUD audio cue authoring, compact audio pack tooling, the root `Audio` runtime service, and an internal dev command for auditioning loaded or inline BAUD cues with an action bar visualizer that keeps richer inline authoring metadata out of shipped audio packs.
+
 ## 0.7.0
 
 ### Minor Changes
