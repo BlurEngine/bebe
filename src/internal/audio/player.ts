@@ -8,6 +8,7 @@ import {
     type CustomCommandResult,
     type StartupEvent,
 } from "@minecraft/server";
+import { ActionFormData } from "@minecraft/server-ui";
 import { Context } from "../../context.js";
 import { Audio, playCompiledAudioCue } from "../../audio.js";
 import type { AudioCompiledCue } from "../../audio/compiled.js";
@@ -64,16 +65,21 @@ export type AudioPlayerCommandInstallOptions = {
 };
 
 export type AudioPlayerCommandParseResult =
+    | { readonly kind: "menu" }
     | { readonly kind: "list" }
     | { readonly kind: "play"; readonly cueId: string }
     | { readonly kind: "text"; readonly source: string }
     | { readonly ok: false; readonly message: string };
 
+type AudioPlayerCommandPlaybackRegistry = Map<string, Context>;
+
+const AUDIO_PLAYER_COMMAND_ACTIONS = ["list", "play", "text"] as const;
+
 /**
  * Parses `/namespace:audio` arguments.
  *
- * Supported forms are `list`, `play <cueId>`, shorthand `<cueId>`, and
- * `text <baud>`.
+ * Supported forms are no arguments, `list`, `play <cueId>`, shorthand
+ * `<cueId>`, and `text <baud>`.
  */
 export function parseAudioPlayerCommand(
     args: readonly unknown[],
@@ -81,7 +87,7 @@ export function parseAudioPlayerCommand(
     const actionOrCue = typeof args[0] === "string" ? args[0].trim() : "";
     const cueOrText = typeof args[1] === "string" ? args[1].trim() : "";
     if (!actionOrCue) {
-        return usageError();
+        return { kind: "menu" };
     }
 
     if (actionOrCue === "list") {
@@ -109,14 +115,20 @@ export function installAudioPlayerCommand(
     options: AudioPlayerCommandInstallOptions = {},
 ): () => void {
     const commandContext = new Context();
+    const commandPlaybacks: AudioPlayerCommandPlaybackRegistry = new Map();
     const commandNamespace = normalizeCommandNamespace(
         options.commandNamespace ?? "bebe",
     );
+    const actionEnumName = `${commandNamespace}:audio_action`;
     const visualCues = createAudioVisualCueMap(options.visualPack);
     const actionBarOptions: AudioActionBarOptions = {
         greyPastNotes: options.greyPastNotes ?? true,
     };
     const startupCallback = (event: StartupEvent) => {
+        event.customCommandRegistry.registerEnum(
+            actionEnumName,
+            createAudioPlayerCommandActionEnumValues(),
+        );
         event.customCommandRegistry.registerCommand(
             {
                 name: `${commandNamespace}:audio`,
@@ -125,13 +137,12 @@ export function installAudioPlayerCommand(
                     options.commandPermissionLevel ??
                     CommandPermissionLevel.GameDirectors,
                 cheatsRequired: true,
-                mandatoryParameters: [
-                    {
-                        name: "actionOrCue",
-                        type: CustomCommandParamType.String,
-                    },
-                ],
+                mandatoryParameters: [],
                 optionalParameters: [
+                    {
+                        name: actionEnumName,
+                        type: CustomCommandParamType.Enum,
+                    },
                     {
                         name: "cueOrText",
                         type: CustomCommandParamType.String,
@@ -146,6 +157,7 @@ export function installAudioPlayerCommand(
                     options.logger,
                     visualCues,
                     actionBarOptions,
+                    commandPlaybacks,
                 ),
         );
     };
@@ -158,6 +170,14 @@ export function installAudioPlayerCommand(
     };
 }
 
+function createAudioPlayerCommandActionEnumValues(): string[] {
+    const values = new Set<string>(AUDIO_PLAYER_COMMAND_ACTIONS);
+    for (const [cueId] of Audio.cues()) {
+        values.add(cueId);
+    }
+    return [...values];
+}
+
 function handleAudioPlayerCommand(
     context: Context,
     origin: CustomCommandOrigin,
@@ -165,6 +185,7 @@ function handleAudioPlayerCommand(
     logger: AudioPlayerCommandLogger | undefined,
     visualCues: ReadonlyMap<string, AudioVisualCue>,
     actionBarOptions: AudioActionBarOptions,
+    commandPlaybacks: AudioPlayerCommandPlaybackRegistry,
 ): CustomCommandResult {
     const player = origin.sourceEntity;
     if (!(player instanceof Player)) {
@@ -179,6 +200,28 @@ function handleAudioPlayerCommand(
         return {
             status: CustomCommandStatus.Failure,
             message: action.message,
+        };
+    }
+
+    if (action.kind === "menu") {
+        context.run(() => {
+            void showAudioPlayerMenu(
+                context,
+                player,
+                logger,
+                visualCues,
+                actionBarOptions,
+                commandPlaybacks,
+            ).catch((error: unknown) => {
+                logger?.error(
+                    "[Bebe audio] Failed to show BAUD audio menu.",
+                    error,
+                );
+            });
+        });
+        return {
+            status: CustomCommandStatus.Success,
+            message: "Opening BAUD audio menu.",
         };
     }
 
@@ -200,6 +243,7 @@ function handleAudioPlayerCommand(
             action.source,
             logger,
             actionBarOptions,
+            commandPlaybacks,
         );
     }
 
@@ -211,28 +255,70 @@ function handleAudioPlayerCommand(
         };
     }
 
-    system.run(() => {
-        try {
-            startAudioVisualizer(
-                context,
-                player,
-                visualCues.get(action.cueId) ?? cue,
-                logger,
-                actionBarOptions,
-            );
-            Audio.play(context, action.cueId, { target: player });
-        } catch (error) {
-            logger?.error(
-                `[Bebe audio] Failed to play BAUD cue "${action.cueId}".`,
-                error,
-            );
-        }
-    });
+    scheduleLoadedAudioPlayerCommandPlayback(
+        context,
+        player,
+        action.cueId,
+        visualCues.get(action.cueId) ?? cue,
+        logger,
+        actionBarOptions,
+        commandPlaybacks,
+    );
 
     return {
         status: CustomCommandStatus.Success,
         message: `Playing BAUD cue "${action.cueId}".`,
     };
+}
+
+async function showAudioPlayerMenu(
+    context: Context,
+    player: Player,
+    logger: AudioPlayerCommandLogger | undefined,
+    visualCues: ReadonlyMap<string, AudioVisualCue>,
+    actionBarOptions: AudioActionBarOptions,
+    commandPlaybacks: AudioPlayerCommandPlaybackRegistry,
+): Promise<void> {
+    const cues = Audio.cues();
+    const hasActivePlayback = commandPlaybacks.has(player.id);
+    const form = new ActionFormData().title("BAUD Audio");
+    if (cues.length === 0) {
+        form.body("No BAUD cues are loaded.");
+    }
+    if (hasActivePlayback) {
+        form.button("Clear");
+    }
+    for (const cue of cues) {
+        form.button(cue[0]);
+    }
+
+    const response = await form.show(player);
+    if (response.canceled || response.selection === undefined) {
+        return;
+    }
+
+    if (hasActivePlayback && response.selection === 0) {
+        stopAudioPlayerCommandPlayback(commandPlaybacks, player);
+        return;
+    }
+
+    const cueIndex = hasActivePlayback
+        ? response.selection - 1
+        : response.selection;
+    const cue = cues[cueIndex];
+    if (!cue) {
+        return;
+    }
+
+    scheduleLoadedAudioPlayerCommandPlayback(
+        context,
+        player,
+        cue[0],
+        visualCues.get(cue[0]) ?? cue,
+        logger,
+        actionBarOptions,
+        commandPlaybacks,
+    );
 }
 
 function handleAudioTextCommand(
@@ -241,6 +327,7 @@ function handleAudioTextCommand(
     source: string,
     logger: AudioPlayerCommandLogger | undefined,
     actionBarOptions: AudioActionBarOptions,
+    commandPlaybacks: AudioPlayerCommandPlaybackRegistry,
 ): CustomCommandResult {
     const compilation = compileAudioCommandText(source);
     if (compilation instanceof Error) {
@@ -265,28 +352,153 @@ function handleAudioTextCommand(
         };
     }
 
-    system.run(() => {
+    scheduleCompiledAudioPlayerCommandPlayback(
+        context,
+        player,
+        cue,
+        pack.s,
+        visualCue,
+        logger,
+        actionBarOptions,
+        commandPlaybacks,
+    );
+
+    return {
+        status: CustomCommandStatus.Success,
+        message: `Playing BAUD text cue "${cue[0]}".`,
+    };
+}
+
+function scheduleLoadedAudioPlayerCommandPlayback(
+    context: Context,
+    player: Player,
+    cueId: string,
+    visualCue: AudioCompiledCue | AudioVisualCue,
+    logger: AudioPlayerCommandLogger | undefined,
+    actionBarOptions: AudioActionBarOptions,
+    commandPlaybacks: AudioPlayerCommandPlaybackRegistry,
+): void {
+    const playbackContext = replaceAudioPlayerCommandPlayback(
+        context,
+        commandPlaybacks,
+        player,
+    );
+    playbackContext.run(() => {
         try {
             startAudioVisualizer(
-                context,
+                playbackContext,
                 player,
                 visualCue,
                 logger,
                 actionBarOptions,
             );
-            playCompiledAudioCue(context, cue, pack.s, { target: player });
+            Audio.play(playbackContext, cueId, { target: player });
+            clearAudioPlayerCommandPlaybackAfterCue(
+                playbackContext,
+                commandPlaybacks,
+                player,
+                visualCue,
+            );
         } catch (error) {
+            playbackContext.dispose();
+            logger?.error(
+                `[Bebe audio] Failed to play BAUD cue "${cueId}".`,
+                error,
+            );
+        }
+    });
+}
+
+function scheduleCompiledAudioPlayerCommandPlayback(
+    context: Context,
+    player: Player,
+    cue: AudioCompiledCue,
+    soundIds: readonly string[],
+    visualCue: AudioVisualCue,
+    logger: AudioPlayerCommandLogger | undefined,
+    actionBarOptions: AudioActionBarOptions,
+    commandPlaybacks: AudioPlayerCommandPlaybackRegistry,
+): void {
+    const playbackContext = replaceAudioPlayerCommandPlayback(
+        context,
+        commandPlaybacks,
+        player,
+    );
+    playbackContext.run(() => {
+        try {
+            startAudioVisualizer(
+                playbackContext,
+                player,
+                visualCue,
+                logger,
+                actionBarOptions,
+            );
+            playCompiledAudioCue(playbackContext, cue, soundIds, {
+                target: player,
+            });
+            clearAudioPlayerCommandPlaybackAfterCue(
+                playbackContext,
+                commandPlaybacks,
+                player,
+                visualCue,
+            );
+        } catch (error) {
+            playbackContext.dispose();
             logger?.error(
                 `[Bebe audio] Failed to play BAUD text cue "${cue[0]}".`,
                 error,
             );
         }
     });
+}
 
-    return {
-        status: CustomCommandStatus.Success,
-        message: `Playing BAUD text cue "${cue[0]}".`,
-    };
+function replaceAudioPlayerCommandPlayback(
+    context: Context,
+    commandPlaybacks: AudioPlayerCommandPlaybackRegistry,
+    player: Player,
+): Context {
+    stopAudioPlayerCommandPlayback(commandPlaybacks, player, {
+        clearActionBar: false,
+    });
+    const playbackContext = context.createScope();
+    commandPlaybacks.set(player.id, playbackContext);
+    playbackContext.use(() => {
+        if (commandPlaybacks.get(player.id) === playbackContext) {
+            commandPlaybacks.delete(player.id);
+        }
+    });
+    return playbackContext;
+}
+
+function stopAudioPlayerCommandPlayback(
+    commandPlaybacks: AudioPlayerCommandPlaybackRegistry,
+    player: Player,
+    options: { readonly clearActionBar?: boolean } = {},
+): boolean {
+    const playbackContext = commandPlaybacks.get(player.id);
+    if (!playbackContext) {
+        return false;
+    }
+
+    playbackContext.dispose();
+    if (options.clearActionBar !== false) {
+        player.onScreenDisplay.setActionBar("");
+    }
+    return true;
+}
+
+function clearAudioPlayerCommandPlaybackAfterCue(
+    playbackContext: Context,
+    commandPlaybacks: AudioPlayerCommandPlaybackRegistry,
+    player: Player,
+    cue: AudioCompiledCue | AudioVisualCue,
+): void {
+    const endTick = audioVisualizationDurationTicks(cue);
+    playbackContext.timeout(Math.max(1, endTick + 1), () => {
+        if (commandPlaybacks.get(player.id) === playbackContext) {
+            playbackContext.dispose();
+        }
+    });
 }
 
 function startAudioVisualizer(

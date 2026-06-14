@@ -58,6 +58,15 @@ audio compiler to bake the files. The compiler writes the compact pack to
 and the generated bootstrap injects `Audio.load(...)` before the authored
 runtime entry runs.
 
+MIDI files can be used as an import source for BAUD, but they are not runtime
+assets. The Node-only `@blurengine/bebe/tooling/node` surface exposes
+`convertMidiToBaud(data, options)` and
+`convertMidiToBaudWithDiagnostics(data, options)` so tools can parse a Standard
+MIDI file, quantize its notes to Bedrock ticks, and emit editable BAUD text
+under `audio/`. The converter reads PPQ timing, tempo-map changes, program
+changes, basic note on/off events, and common meta events; SMPTE-time MIDI files
+are rejected.
+
 Runtime code imports `Audio` from the root package and plays a cue id through a
 `Context`:
 
@@ -94,6 +103,8 @@ need a player target, but the scheduled notes still belong to the supplied
   `0..100`.
 - Notes use `c`, `d`, `e`, `f`, `g`, `a`, and `b`.
 - Sharps and flats use `#` and `b`, such as `f#` or `bb`.
+- Authored notes must resolve to MIDI-style keys `0..127`, from `o-1 c` up
+  through `o9 g`. Notes outside that range are rejected at compile time.
 - Rests use `r` and advance the voice without playing a sound.
 - Octave shifts use `>` to move up and `<` to move down for following tokens in
   that voice.
@@ -113,9 +124,55 @@ a pitch identity so playback can calculate Minecraft sound pitch consistently.
 BAUD is the authored source format, and runtime code loads compiled Bebe audio
 packs rather than public MIDI files.
 
+Converted MIDI should be treated as a starting point for BAUD authoring. When a
+MIDI file carries General MIDI channel/program data, the converter maps a small
+curated set of close Bedrock sounds, currently piano/harp-like parts,
+chromatic percussion, guitar-like parts, bass parts, string/brass/reed/pipe
+parts, synth leads, and common percussion. Known unsupported vocal, pad, and
+effect programs are dropped by default instead of guessed; the diagnostic
+converter reports which parts were mapped or dropped. Dense polyphonic melodic
+parts are split into readable register voices, such as
+`@piano_right`, `@piano_inner`, and `@piano_left`, while single-line parts stay
+as one voice. If the MIDI has no useful program data, the converter keeps a
+piano-style fallback that splits notes into `@right`, `@inner`, and `@left`
+voices using `note.harp`.
+Passing an explicit `soundId` is treated as an author override for melodic
+parts. Output remains deterministic for the same input/options and keeps the
+generated file human-editable so authors can choose better Bedrock sounds after
+import.
+
+General MIDI percussion is treated as timbre data rather than a true melodic
+pitch. For example, snare hits are mapped to `note.snare` in a curated octave
+that sounds more useful in Bedrock instead of preserving the raw drum note's
+original octave. The original rhythm and pitch class remain deterministic, but
+authors should still audition generated percussion and adjust the BAUD if a
+Minecraft sample feels harsh.
+
+The MIDI importer preserves useful performance data when BAUD can express it
+without making the authored output noisy. Note velocity, MIDI channel volume,
+and expression are folded into each generated voice's `v<volume>` value.
+Sustain pedal events extend note durations before quantisation so piano-style
+imports keep their held timing in the rendered BAUD. When source dynamics vary
+inside one generated voice, the importer uses a stable voice-level volume and
+emits a diagnostic that per-note dynamics were approximated.
+
+The MIDI importer uses the `minecraft` playback profile by default. This keeps
+the generated BAUD convenient for Bedrock's limited note-sound palette by
+collapsing exact duplicate starts, thinning repeated low-bass hits, and
+budgeting unsafe same-tick stacks by approximate sound pressure. Melody and
+structural rhythm are prioritised over duplicated bass, dense harmony, and light
+percussion texture. Use the `raw` profile when you need the older faithful
+import shape for manual editing, or `compact` when a cue needs stricter mobile
+and server-friendly output. These profiles are deterministic import rules, not
+adaptive mix or runtime effects.
+
 Durations are converted to Bedrock ticks. Bebe rounds each duration to the
 nearest whole tick and clamps it to at least one tick, so very fast tempos or
 small durations can shift by a tick compared with ideal musical notation.
+Tempo maps are used for quantisation and then baked into BAUD spacing because a
+BAUD cue has one declared tempo. MIDI pan, pitch bend, track names, and later
+time-signature changes are reported through diagnostics when present rather
+than silently implying they were faithfully represented.
 
 Only `audio/**/*.baud` files are project BAUD sources. A root-level
 `audio.baud` file is rejected; put BAUD files under the `audio/` folder
@@ -138,11 +195,21 @@ During `blr dev`, the CLI can inject Bebe's internal audio player command when
 the installed Bebe package exposes it. The command uses the project namespace:
 
 ```text
+/<namespace>:audio
 /<namespace>:audio list
 /<namespace>:audio play reward.success
 /<namespace>:audio reward.success
 /<namespace>:audio text "cue preview t120; @lead note.harp o4 l4 v80; c e g > c"
 ```
+
+Running the command without arguments opens a development picker form listing
+loaded cue ids. If the command player already has command-started audio playing,
+the picker also shows a `Clear` button that cancels only that player's current
+command playback. Selecting another cue through the picker, shorthand cue
+syntax, `play`, or `text` replaces the same player's previous command playback.
+This replacement rule belongs to the development command only; runtime
+`Audio.play(...)` calls can still overlap naturally for players and world
+positions.
 
 The command plays loaded cue ids, not BAUD file names. The `text` action is a
 development shortcut for auditioning one inline BAUD cue without writing a file;

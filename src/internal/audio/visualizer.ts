@@ -22,6 +22,17 @@ type RenderedAudioVisualVoice = {
     readonly cells: string[];
 };
 
+type AudioVisualRenderData = {
+    readonly endTick: number;
+    readonly gridStep: number;
+    readonly voices: readonly AudioVisualVoiceRenderData[];
+};
+
+type AudioVisualVoiceRenderData = {
+    readonly id: string;
+    readonly tokens: readonly AudioVisualToken[];
+};
+
 export type AudioActionBarOptions = {
     readonly greyPastNotes?: boolean;
 };
@@ -73,6 +84,11 @@ const PITCH_CLASSES: readonly PitchClassView[] = [
     { label: "B", colour: "§d" },
 ];
 
+const visualRenderDataCache = new WeakMap<
+    AudioVisualCue,
+    AudioVisualRenderData
+>();
+
 export function formatAudioActionBar(
     cue: AudioActionBarSource,
     currentTick: number,
@@ -86,7 +102,7 @@ export function formatAudioActionBar(
     const endTick = audioVisualizationDurationTicks(cue);
     const tick = Math.max(0, Math.round(currentTick));
     if (entries.length === 0) {
-        return `BAUD ${cue[0]} ${formatAudioProgress(tick, 0)} ${EMPTY}${RESET}`;
+        return `${formatAudioTitle(cue[0], cue[1], tick, 0)} ${EMPTY}${RESET}`;
     }
 
     const currentIndex = currentAudioVisualEntryIndex(entries, tick);
@@ -106,22 +122,14 @@ export function formatAudioActionBar(
         }),
     );
 
-    return `BAUD ${cue[0]} ${formatAudioProgress(tick, endTick)} ${tokens.join(" ")}`;
+    return `${formatAudioTitle(cue[0], cue[1], tick, endTick)} ${tokens.join(" ")}`;
 }
 
 export function audioVisualizationDurationTicks(
     cue: AudioActionBarSource,
 ): number {
     if (isAudioVisualCue(cue)) {
-        return cue.voices.reduce(
-            (lastTick, voice) =>
-                voice.tokens.reduce(
-                    (voiceLastTick, token) =>
-                        Math.max(voiceLastTick, token.tick + token.duration),
-                    lastTick,
-                ),
-            0,
-        );
+        return getAudioVisualRenderData(cue).endTick;
     }
 
     return cue[3].reduce((lastTick, note) => Math.max(lastTick, note[0]), 0);
@@ -132,29 +140,26 @@ function formatVisualAudioActionBar(
     currentTick: number,
     options: AudioActionBarOptions,
 ): string {
-    const endTick = audioVisualizationDurationTicks(cue);
+    const renderData = getAudioVisualRenderData(cue);
+    const endTick = renderData.endTick;
     const tick = Math.max(0, Math.round(currentTick));
-    const gridStep = audioVisualGridStep(cue);
+    const gridStep = renderData.gridStep;
     const startTick = audioVisualGridStartTick(tick, endTick, gridStep);
     const cellCount = audioVisualGridCellCount(startTick, endTick, gridStep);
-    const voices = cue.voices
+    const voices = renderData.voices
         .map((voice) => {
             const tokens = voice.tokens;
             if (tokens.length === 0) {
                 return undefined;
             }
 
-            const cells = Array.from({ length: cellCount }, (_, index) =>
-                formatAudioTimelineCell(tokens, {
-                    cellTick: startTick + index * gridStep,
-                    current:
-                        tick >= startTick + index * gridStep &&
-                        tick < startTick + (index + 1) * gridStep,
-                    greyPastNotes: options.greyPastNotes === true,
-                    gridStep,
-                    past: startTick + (index + 1) * gridStep <= tick,
-                }),
-            );
+            const cells = formatAudioTimelineCells(tokens, {
+                cellCount,
+                currentTick: tick,
+                greyPastNotes: options.greyPastNotes === true,
+                gridStep,
+                startTick,
+            });
 
             return {
                 prefix: `@${voice.id}: `,
@@ -166,13 +171,43 @@ function formatVisualAudioActionBar(
         );
 
     if (voices.length === 0) {
-        return `BAUD ${cue.id} ${formatAudioProgress(tick, 0)} ${EMPTY}${RESET}`;
+        return `${formatAudioTitle(cue.id, cue.tempo, tick, 0)} ${EMPTY}${RESET}`;
     }
 
     return balanceAudioActionBarLines([
-        `BAUD ${cue.id} ${formatAudioProgress(tick, endTick)}`,
+        formatAudioTitle(cue.id, cue.tempo, tick, endTick),
         ...formatAudioVisualVoiceLines(voices),
     ]).join("\n");
+}
+
+function getAudioVisualRenderData(cue: AudioVisualCue): AudioVisualRenderData {
+    const cached = visualRenderDataCache.get(cue);
+    if (cached) {
+        return cached;
+    }
+
+    const voices = cue.voices.map((voice) => ({
+        id: voice.id,
+        tokens: voice.tokens
+            .filter((token) => token.kind !== "bar")
+            .sort((left, right) => left.tick - right.tick),
+    }));
+    const tokens = voices.flatMap((voice) => voice.tokens);
+    const durations = tokens
+        .filter((token) => token.duration > 0)
+        .map((token) => token.duration);
+    const data = {
+        endTick: tokens.reduce(
+            (lastTick, token) =>
+                Math.max(lastTick, token.tick + token.duration),
+            0,
+        ),
+        gridStep:
+            durations.length === 0 ? 1 : Math.max(1, Math.min(...durations)),
+        voices,
+    };
+    visualRenderDataCache.set(cue, data);
+    return data;
 }
 
 function createAudioVisualEntries(cue: AudioCompiledCue): AudioVisualEntry[] {
@@ -257,14 +292,19 @@ function formatAudioProgress(currentTick: number, endTick: number): string {
     return `${String(clampedTick).padStart(width, "0")}/${endTick}`;
 }
 
-function audioVisualGridStep(cue: AudioVisualCue): number {
-    const durations = cue.voices.flatMap((voice) =>
-        voice.tokens
-            .filter((token) => token.kind !== "bar" && token.duration > 0)
-            .map((token) => token.duration),
-    );
+function formatAudioTitle(
+    cueId: string,
+    tempo: number,
+    currentTick: number,
+    endTick: number,
+): string {
+    return `BAUD ${cueId} ${formatAudioBeat(tempo, currentTick)} ${formatAudioProgress(currentTick, endTick)}`;
+}
 
-    return durations.length === 0 ? 1 : Math.max(1, Math.min(...durations));
+function formatAudioBeat(tempo: number, currentTick: number): string {
+    const ticksPerBeat = Math.max(1, Math.round(1200 / tempo));
+    const beat = Math.max(1, Math.floor(currentTick / ticksPerBeat) + 1);
+    return `b${String(beat).padStart(3, "0")}`;
 }
 
 function audioVisualGridStartTick(
@@ -300,22 +340,56 @@ function audioVisualGridCellCount(
     );
 }
 
-function formatAudioTimelineCell(
+function formatAudioTimelineCells(
     tokens: readonly AudioVisualToken[],
     options: {
-        readonly cellTick: number;
-        readonly current: boolean;
+        readonly cellCount: number;
+        readonly currentTick: number;
         readonly greyPastNotes: boolean;
         readonly gridStep: number;
+        readonly startTick: number;
+    },
+): string[] {
+    const cells: string[] = [];
+    let tokenIndex = 0;
+    for (let index = 0; index < options.cellCount; index += 1) {
+        const cellTick = options.startTick + index * options.gridStep;
+        while (
+            tokenIndex < tokens.length &&
+            tokens[tokenIndex]!.tick < cellTick
+        ) {
+            tokenIndex += 1;
+        }
+
+        const token = tokens[tokenIndex];
+        cells.push(
+            formatAudioTimelineCell(token, {
+                current:
+                    options.currentTick >= cellTick &&
+                    options.currentTick < cellTick + options.gridStep,
+                greyPastNotes: options.greyPastNotes,
+                past: cellTick + options.gridStep <= options.currentTick,
+                tokenVisible:
+                    token !== undefined &&
+                    token.tick >= cellTick &&
+                    token.tick < cellTick + options.gridStep,
+            }),
+        );
+    }
+
+    return cells;
+}
+
+function formatAudioTimelineCell(
+    token: AudioVisualToken | undefined,
+    options: {
+        readonly current: boolean;
+        readonly greyPastNotes: boolean;
         readonly past: boolean;
+        readonly tokenVisible: boolean;
     },
 ): string {
-    const token = audioVisualTokenStartingInCell(
-        tokens,
-        options.cellTick,
-        options.gridStep,
-    );
-    if (!token) {
+    if (!token || !options.tokenVisible) {
         return formatAudioTimelineFiller(options);
     }
 
@@ -341,19 +415,6 @@ function formatAudioTimelineCell(
             : compactAudioNoteLabel(token.label);
     const safeLabel = label.length === 0 ? "_" : label;
     return formatAudioTimelineCellText(safeLabel, colour, options.current);
-}
-
-function audioVisualTokenStartingInCell(
-    tokens: readonly AudioVisualToken[],
-    cellTick: number,
-    gridStep: number,
-): AudioVisualToken | undefined {
-    return tokens.find(
-        (token) =>
-            token.kind !== "bar" &&
-            token.tick >= cellTick &&
-            token.tick < cellTick + gridStep,
-    );
 }
 
 function formatAudioTimelineFiller(options: {

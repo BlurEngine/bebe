@@ -60,6 +60,7 @@ const jobs = new Map<number, ScheduledJob>();
 const entityRemoveHandlers = new Set<EntityRemoveHandler>();
 const startupEvent = new MockEventSignal<{
     customCommandRegistry: {
+        registerEnum(name: string, values: string[]): void;
         registerCommand(
             command: CustomCommand,
             callback: CustomCommandCallback,
@@ -73,6 +74,7 @@ const customCommands = new Map<
         readonly callback: CustomCommandCallback;
     }
 >();
+const customCommandEnums = new Map<string, readonly string[]>();
 const afterEvents = {
     entityItemPickup: new MockEventSignal<{
         entity: Entity;
@@ -183,6 +185,7 @@ export enum CommandPermissionLevel {
 }
 
 export enum CustomCommandParamType {
+    Enum = "Enum",
     String = "String",
 }
 
@@ -346,6 +349,9 @@ export const minecraftMockControl = {
     emitStartup() {
         startupEvent.emit({
             customCommandRegistry: {
+                registerEnum(name, values) {
+                    customCommandEnums.set(name, [...values]);
+                },
                 registerCommand(command, callback) {
                     customCommands.set(command.name, {
                         command,
@@ -358,6 +364,9 @@ export const minecraftMockControl = {
     getCustomCommand(name: string) {
         return customCommands.get(name);
     },
+    getCustomCommandEnum(name: string) {
+        return customCommandEnums.get(name);
+    },
     reset() {
         currentTick = 0;
         nextHandle = 1;
@@ -365,6 +374,7 @@ export const minecraftMockControl = {
         entityRemoveHandlers.clear();
         startupEvent.reset();
         customCommands.clear();
+        customCommandEnums.clear();
         allPlayers = [];
         for (const signal of Object.values(afterEvents)) {
             signal.reset();

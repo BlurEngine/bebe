@@ -109,6 +109,18 @@ export type {
     AudioVisualTokenKind,
     AudioVisualVoice,
 } from "../audio/definitions.js";
+export {
+    convertMidiToBaud,
+    convertMidiToBaudWithDiagnostics,
+} from "../audio/midi.js";
+export type {
+    MidiToBaudConversion,
+    MidiToBaudDiagnostic,
+    MidiToBaudLayerId,
+    MidiToBaudOptions,
+    MidiToBaudPolicyOptions,
+    MidiToBaudProfile,
+} from "../audio/midi.js";
 export { createAudioAssetCompiler, audioAssetCompiler } from "./audio.js";
 export {
     AUDIO_COMPILED_FORMAT_VERSION,

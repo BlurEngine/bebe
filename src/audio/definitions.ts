@@ -16,6 +16,8 @@ export const DEFAULT_AUDIO_LENGTH = 4;
 export const DEFAULT_AUDIO_VOLUME = 80;
 export const DEFAULT_AUDIO_PAN = 100;
 export const DEFAULT_AUDIO_CENTS = 0;
+const MIN_AUDIO_MIDI_KEY = 0;
+const MAX_AUDIO_MIDI_KEY = 127;
 
 export type AudioSourceFile = {
     readonly relativePath: string;
@@ -616,7 +618,7 @@ function parseSimpleAudioToken(
         throw parseError(context, `Invalid audio token "${token}".`);
     }
 
-    const pitch = createParsedPitch(note[1], note[2], voice.octave);
+    const pitch = createParsedPitch(note[1], note[2], voice.octave, context);
     const denominator = durationDenominator(note[3], voice.length, context);
     const dotted = Boolean(note[4]);
     const duration = audioDurationTicks(
@@ -658,7 +660,7 @@ function parseNotePitch(
 ): ParsedPitch | undefined {
     const note = NOTE_TOKEN_PATTERN.exec(token);
     if (note) {
-        return createParsedPitch(note[1], note[2], octave);
+        return createParsedPitch(note[1], note[2], octave, context);
     }
     if (REST_TOKEN_PATTERN.test(token)) {
         return undefined;
@@ -671,13 +673,23 @@ function createParsedPitch(
     note: string,
     accidental: string | undefined,
     octave: number,
+    context: { readonly source: string; readonly line: number },
 ): ParsedPitch {
     const semitone =
         SEMITONES[note.toLowerCase()] +
         (accidental === "#" ? 1 : accidental?.toLowerCase() === "b" ? -1 : 0);
+    const label = `${note.toUpperCase()}${formatAccidental(accidental)}${octave}`;
+    const midiKey = (octave + 1) * 12 + semitone;
+    if (midiKey < MIN_AUDIO_MIDI_KEY || midiKey > MAX_AUDIO_MIDI_KEY) {
+        throw parseError(
+            context,
+            `Audio note ${label} resolves to MIDI key ${midiKey}, outside supported range ${MIN_AUDIO_MIDI_KEY}..${MAX_AUDIO_MIDI_KEY}.`,
+        );
+    }
+
     return {
-        label: `${note.toUpperCase()}${formatAccidental(accidental)}${octave}`,
-        midiKey: (octave + 1) * 12 + semitone,
+        label,
+        midiKey,
     };
 }
 

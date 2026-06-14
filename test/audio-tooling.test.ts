@@ -3,6 +3,7 @@ import {
     GENERATED_AUDIO_FILE,
     GENERATED_AUDIO_VISUALS_FILE,
     PROJECT_AUDIO_DIRECTORY,
+    compileAudioText,
     createAudioAssetCompiler,
 } from "@blurengine/bebe/tooling/node";
 
@@ -144,5 +145,37 @@ describe("audio asset compiler", () => {
             'import __bebeAudio from "./dist/generated/bebe/audio.json";',
             "Audio.load(__bebeAudio);",
         ]);
+    });
+
+    it("accepts authored notes at MIDI range boundaries", () => {
+        expect(
+            compileAudioText(
+                "cue range.low t120\n@lead note.harp o-1 l4 v80\nc\n",
+            ).c[0]?.[3][0]?.[2],
+        ).toBe(0);
+        expect(
+            compileAudioText(
+                "cue range.high t120\n@lead note.harp o9 l4 v80\ng\n",
+            ).c[0]?.[3][0]?.[2],
+        ).toBe(127);
+    });
+
+    it("rejects authored notes outside the MIDI range", () => {
+        expect(() =>
+            compileAudioText(
+                "cue range.too-high t120\n@lead note.harp o9 l4 v80\ng#\n",
+                { source: "audio/range.baud" },
+            ),
+        ).toThrow(
+            "audio/range.baud:3: Audio note G#9 resolves to MIDI key 128, outside supported range 0..127.",
+        );
+        expect(() =>
+            compileAudioText(
+                "cue range.too-low t120\n@lead note.harp o-2 l4 v80\nb\n",
+                { source: "audio/range.baud" },
+            ),
+        ).toThrow(
+            "audio/range.baud:3: Audio note B-2 resolves to MIDI key -1, outside supported range 0..127.",
+        );
     });
 });

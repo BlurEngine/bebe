@@ -8,18 +8,26 @@ import { formatAudioActionBar } from "../src/internal/audio/visualizer.js";
 import { compileAudioTextWithVisuals } from "../src/audio/definitions.js";
 import {
     CommandPermissionLevel,
+    CustomCommandParamType,
     CustomCommandStatus,
     Player,
     minecraftMockControl,
 } from "./support/minecraft-server.mock";
+import { minecraftServerUiMockControl } from "./support/minecraft-server-ui.mock";
 
 describe("internal audio player command", () => {
     afterEach(() => {
         Audio.clear();
         minecraftMockControl.reset();
+        minecraftServerUiMockControl.reset();
     });
 
     it("registers the audio command in the configured namespace", () => {
+        Audio.load({
+            v: 1,
+            s: ["note.harp"],
+            c: [["reward.success", 120, [0, 0, 0, 0], []]],
+        });
         installAudioPlayerCommand({
             commandNamespace: "demo_pack",
             commandPermissionLevel: CommandPermissionLevel.Any,
@@ -33,15 +41,25 @@ describe("internal audio player command", () => {
             description: "Play Bebe audio in a dev world.",
             permissionLevel: CommandPermissionLevel.Any,
             cheatsRequired: true,
-            mandatoryParameters: [{ name: "actionOrCue", type: "String" }],
-            optionalParameters: [{ name: "cueOrText", type: "String" }],
+            mandatoryParameters: [],
+            optionalParameters: [
+                {
+                    name: "demo_pack:audio_action",
+                    type: CustomCommandParamType.Enum,
+                },
+                { name: "cueOrText", type: CustomCommandParamType.String },
+            ],
         });
+        expect(
+            minecraftMockControl.getCustomCommandEnum("demo_pack:audio_action"),
+        ).toEqual(["list", "play", "text", "reward.success"]);
         expect(
             minecraftMockControl.getCustomCommand("bebe:audio"),
         ).toBeUndefined();
     });
 
     it("parses list, play, and shorthand command arguments", () => {
+        expect(parseAudioPlayerCommand([])).toEqual({ kind: "menu" });
         expect(parseAudioPlayerCommand(["list"])).toEqual({ kind: "list" });
         expect(parseAudioPlayerCommand(["play", "reward.success"])).toEqual({
             kind: "play",
@@ -60,16 +78,207 @@ describe("internal audio player command", () => {
             kind: "play",
             cueId: "reward.success",
         });
-        expect(parseAudioPlayerCommand([])).toEqual({
-            ok: false,
-            message:
-                "Use audio list, audio play <cueId>, audio <cueId>, or audio text <baud>.",
-        });
         expect(parseAudioPlayerCommand(["text"])).toEqual({
             ok: false,
             message:
                 "Use audio list, audio play <cueId>, audio <cueId>, or audio text <baud>.",
         });
+    });
+
+    it("opens a cue picker form when the command has no arguments", async () => {
+        Audio.load({
+            v: 1,
+            s: ["note.harp"],
+            c: [
+                ["alpha", 120, [0, 0, 0, 0], [[0, 0, 60, 80, 100, 0]]],
+                ["beta", 120, [0, 0, 0, 0], [[0, 0, 64, 80, 100, 0]]],
+            ],
+        });
+        minecraftServerUiMockControl.queueActionFormResponse({
+            canceled: true,
+        });
+        installAudioPlayerCommand({ commandNamespace: "demo_pack" });
+        minecraftMockControl.emitStartup();
+        const command =
+            minecraftMockControl.getCustomCommand("demo_pack:audio")!;
+        const player = new Player({ id: "player" });
+
+        expect(command.callback({ sourceEntity: player })).toEqual({
+            status: CustomCommandStatus.Success,
+            message: "Opening BAUD audio menu.",
+        });
+
+        minecraftMockControl.advance(1);
+        await flushPromises();
+
+        expect(minecraftServerUiMockControl.shownActionForms).toHaveLength(1);
+        expect(
+            minecraftServerUiMockControl.shownActionForms[0]?.buttons.map(
+                (button) => button.text,
+            ),
+        ).toEqual(["alpha", "beta"]);
+    });
+
+    it("plays a cue selected from the no-argument command form", async () => {
+        Audio.load({
+            v: 1,
+            s: ["note.harp", "note.bell"],
+            c: [
+                ["alpha", 120, [0, 0, 0, 0], [[0, 0, 60, 80, 100, 0]]],
+                ["beta", 120, [0, 0, 0, 0], [[0, 1, 64, 80, 100, 0]]],
+            ],
+        });
+        minecraftServerUiMockControl.queueActionFormResponse({
+            canceled: false,
+            selection: 1,
+        });
+        installAudioPlayerCommand({ commandNamespace: "demo_pack" });
+        minecraftMockControl.emitStartup();
+        const command =
+            minecraftMockControl.getCustomCommand("demo_pack:audio")!;
+        const player = new Player({ id: "player" });
+
+        command.callback({ sourceEntity: player });
+        minecraftMockControl.advance(1);
+        await flushPromises();
+        minecraftMockControl.advance(1);
+
+        expect(player.playedSounds.map((sound) => sound.soundId)).toEqual([
+            "note.bell",
+        ]);
+    });
+
+    it("shows a clear button only while command audio is active", async () => {
+        Audio.load({
+            v: 1,
+            s: ["note.harp"],
+            c: [
+                [
+                    "alpha",
+                    120,
+                    [0, 0, 0, 0],
+                    [
+                        [0, 0, 60, 80, 100, 0],
+                        [10, 0, 72, 80, 100, 0],
+                    ],
+                ],
+            ],
+        });
+        installAudioPlayerCommand({ commandNamespace: "demo_pack" });
+        minecraftMockControl.emitStartup();
+        const command =
+            minecraftMockControl.getCustomCommand("demo_pack:audio")!;
+        const player = new Player({ id: "player" });
+
+        command.callback({ sourceEntity: player }, "alpha");
+        minecraftMockControl.advance(1);
+        expect(player.playedSounds).toHaveLength(1);
+
+        minecraftServerUiMockControl.queueActionFormResponse({
+            canceled: false,
+            selection: 0,
+        });
+        command.callback({ sourceEntity: player });
+        minecraftMockControl.advance(1);
+        await flushPromises();
+
+        expect(
+            minecraftServerUiMockControl.shownActionForms[0]?.buttons.map(
+                (button) => button.text,
+            ),
+        ).toEqual(["Clear", "alpha"]);
+
+        minecraftMockControl.advance(12);
+
+        expect(player.playedSounds).toHaveLength(1);
+
+        minecraftServerUiMockControl.queueActionFormResponse({
+            canceled: true,
+        });
+        command.callback({ sourceEntity: player });
+        minecraftMockControl.advance(1);
+        await flushPromises();
+
+        expect(
+            minecraftServerUiMockControl.shownActionForms[1]?.buttons.map(
+                (button) => button.text,
+            ),
+        ).toEqual(["alpha"]);
+    });
+
+    it("cancels the player's previous command audio when another cue is scheduled", () => {
+        Audio.load({
+            v: 1,
+            s: ["note.harp", "note.bell"],
+            c: [
+                [
+                    "alpha",
+                    120,
+                    [0, 0, 0, 0],
+                    [
+                        [0, 0, 60, 80, 100, 0],
+                        [10, 0, 72, 80, 100, 0],
+                    ],
+                ],
+                ["beta", 120, [0, 0, 0, 0], [[0, 1, 64, 80, 100, 0]]],
+            ],
+        });
+        installAudioPlayerCommand({ commandNamespace: "demo_pack" });
+        minecraftMockControl.emitStartup();
+        const command =
+            minecraftMockControl.getCustomCommand("demo_pack:audio")!;
+        const player = new Player({ id: "player" });
+
+        command.callback({ sourceEntity: player }, "alpha");
+        minecraftMockControl.advance(1);
+        command.callback({ sourceEntity: player }, "beta");
+        minecraftMockControl.advance(1);
+        minecraftMockControl.advance(12);
+
+        expect(player.playedSounds.map((sound) => sound.soundId)).toEqual([
+            "note.harp",
+            "note.bell",
+        ]);
+    });
+
+    it("does not cancel another player's command audio", () => {
+        Audio.load({
+            v: 1,
+            s: ["note.harp", "note.bell"],
+            c: [
+                [
+                    "alpha",
+                    120,
+                    [0, 0, 0, 0],
+                    [
+                        [0, 0, 60, 80, 100, 0],
+                        [10, 0, 72, 80, 100, 0],
+                    ],
+                ],
+                ["beta", 120, [0, 0, 0, 0], [[0, 1, 64, 80, 100, 0]]],
+            ],
+        });
+        installAudioPlayerCommand({ commandNamespace: "demo_pack" });
+        minecraftMockControl.emitStartup();
+        const command =
+            minecraftMockControl.getCustomCommand("demo_pack:audio")!;
+        const firstPlayer = new Player({ id: "first" });
+        const secondPlayer = new Player({ id: "second" });
+
+        command.callback({ sourceEntity: firstPlayer }, "alpha");
+        command.callback({ sourceEntity: secondPlayer }, "alpha");
+        minecraftMockControl.advance(1);
+        command.callback({ sourceEntity: firstPlayer }, "beta");
+        minecraftMockControl.advance(1);
+        minecraftMockControl.advance(12);
+
+        expect(firstPlayer.playedSounds.map((sound) => sound.soundId)).toEqual([
+            "note.harp",
+            "note.bell",
+        ]);
+        expect(secondPlayer.playedSounds.map((sound) => sound.soundId)).toEqual(
+            ["note.harp", "note.harp"],
+        );
     });
 
     it("lists loaded cue ids", () => {
@@ -781,6 +990,20 @@ describe("internal audio player command", () => {
         );
     });
 
+    it("shows the current beat in the actionbar title", () => {
+        const visual = compileAudioTextWithVisuals(
+            [
+                "cue hero.arrival t120",
+                "@lead note.harp o4 l8 v90",
+                "c e g > c",
+            ].join("\n"),
+            { source: "audio/command.baud" },
+        ).visual.cues[0]!;
+
+        expect(audioHeader(formatAudioActionBar(visual, 0))).toContain("b001");
+        expect(audioHeader(formatAudioActionBar(visual, 10))).toContain("b002");
+    });
+
     it("pads inline BAUD actionbar layers for Minecraft's centred proportional font", () => {
         const actionBar = formatAudioActionBar(
             {
@@ -993,6 +1216,11 @@ function latestActionBarMessage(player: Player): string {
     const latest = actionBarMessages(player).at(-1);
     expect(latest).toBeDefined();
     return latest!;
+}
+
+async function flushPromises(): Promise<void> {
+    await Promise.resolve();
+    await Promise.resolve();
 }
 
 function audioHeader(actionBar: string): string {

@@ -297,8 +297,6 @@ function noteVolume(note: AudioCompiledNote): number {
 function notePitch(note: AudioCompiledNote): number {
     const midiKey = note[2];
     const cents = note[5];
-    return Math.max(
-        0.01,
-        Math.min(4, 2 ** ((midiKey - 66) / 12 + cents / 1200)),
-    );
+    const pitch = 2 ** ((midiKey - 66) / 12 + cents / 1200);
+    return Number.isFinite(pitch) ? Math.max(0.01, pitch) : 0.01;
 }

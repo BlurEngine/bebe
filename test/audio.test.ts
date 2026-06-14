@@ -53,6 +53,34 @@ describe("Audio runtime", () => {
         ctx.dispose();
     });
 
+    it("preserves high musical pitches instead of flattening them at pitch 4", () => {
+        const ctx = new Context();
+        const player = new Player({ id: "player" });
+
+        Audio.load({
+            v: 1,
+            s: ["note.harp"],
+            c: [
+                [
+                    "cue",
+                    120,
+                    [0, 0, 0, 0],
+                    [
+                        [0, 0, 90, 80, 100, 0],
+                        [1, 0, 102, 80, 100, 0],
+                    ],
+                ],
+            ],
+        });
+
+        Audio.play(ctx, "cue", { target: player });
+        minecraftMockControl.advance(1);
+
+        expect(player.playedSounds[0]?.options?.pitch).toBeCloseTo(4, 4);
+        expect(player.playedSounds[1]?.options?.pitch).toBeCloseTo(8, 4);
+        ctx.dispose();
+    });
+
     it("keeps active playback bound to the sound table it started with", () => {
         const ctx = new Context();
         const player = new Player({ id: "player" });

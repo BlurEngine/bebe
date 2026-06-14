@@ -32,7 +32,10 @@ Pitch is derived from the authored note name. Internally, BAUD stores a
 MIDI-style semitone key so playback can compute a Bedrock pitch multiplier.
 MIDI key 66 maps to `pitch: 1`, so `o4 f#` is closest to the source sample's
 native pitch. For practical writing, start melodies around `o4` or `o5`, bass
-around `o2` or `o3`, and sparkles around `o5` or `o6`.
+around `o2` or `o3`, and sparkles around `o5` or `o6`. BAUD accepts the
+standard MIDI key span, `o-1 c` through `o9 g`, but the practical range is
+sound-specific. Very high or very low notes can be technically valid while
+still sounding thin, buzzy, harsh, or saturated in Bedrock.
 
 ## Recommended Sound Roles
 
@@ -70,6 +73,12 @@ not give this feature a reliable per-note envelope surface. If bass or impact
 layers leave trailing notes, write more air into the part, lower the volume, or
 choose a shorter sample.
 
+Percussion sounds should be balanced as timbre, not as normal melody. Changing
+the octave of `note.snare`, `note.bd`, or `note.hat` can produce useful colour,
+but it does not make those samples equivalent to pitched instruments. The MIDI
+converter uses curated percussion octaves for the same reason; audition the
+result and keep the version that sits best in the mix.
+
 Very fast durations are rounded to whole Bedrock ticks. At high tempo or tiny
 lengths, the mathematically ideal rhythm and the in-game rhythm can differ by a
 tick. Prefer clear sixteenth-note writing over dense decorative runs when the
@@ -78,6 +87,13 @@ cue needs to feel locked.
 Chords trigger several pitches at the same tick using the same voice sound id.
 They are compact and useful, but wide chords on long samples can get loud or
 phasey. Keep chord voices lower in volume than single-note voices.
+
+Converted MIDI uses a Minecraft-safe profile by default because dense same-tick
+starts can overload vanilla note sounds faster than they overload a normal MIDI
+synth. If an imported cue feels distorted, check for repeated low `note.bass`,
+kick/snare stacks, or many harmony notes starting together before raising
+volumes. Use the raw MIDI import profile only when you want an intentionally
+dense source to edit by hand.
 
 Volume is authored as `v0` through `v100` and maps to Bedrock playback volume
 `0` through `1`. Source samples can still feel louder or quieter than each

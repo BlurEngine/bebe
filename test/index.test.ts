@@ -216,6 +216,8 @@ describe("package root exports", () => {
                 "compileAudioTextWithVisuals",
                 "compileRenderAnchorPack",
                 "compileZonePack",
+                "convertMidiToBaud",
+                "convertMidiToBaudWithDiagnostics",
                 "createBebeTooling",
                 "createDefaultRenderAnchorOutputEntity",
                 "createAudioAssetCompiler",

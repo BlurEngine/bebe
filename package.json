@@ -103,10 +103,14 @@
   },
   "peerDependencies": {
     "@minecraft/server": "^2.3.0",
-    "@minecraft/server-net": "^1.0.0-beta"
+    "@minecraft/server-net": "^1.0.0-beta",
+    "@minecraft/server-ui": "^2.0.0"
   },
   "peerDependenciesMeta": {
     "@minecraft/server-net": {
+      "optional": true
+    },
+    "@minecraft/server-ui": {
       "optional": true
     }
   },
@@ -115,6 +119,7 @@
     "@changesets/cli": "^2.29.7",
     "@minecraft/server": "^2.3.0",
     "@minecraft/server-net": "^1.0.0-beta",
+    "@minecraft/server-ui": "^2.0.0",
     "@minecraft/vanilla-data": "^1.26.10",
     "@types/node": "^25.9.1",
     "@typescript-eslint/eslint-plugin": "^8.58.0",

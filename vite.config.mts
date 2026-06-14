@@ -76,6 +76,15 @@ export default defineConfig({
                     ),
                 ),
             },
+            {
+                find: "@minecraft/server-ui",
+                replacement: fileURLToPath(
+                    new URL(
+                        "./test/support/minecraft-server-ui.mock.ts",
+                        import.meta.url,
+                    ),
+                ),
+            },
         ],
     },
     test: {
