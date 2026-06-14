@@ -6,7 +6,7 @@ This file applies only to agents working in the `bebe/` repository.
 
 - `bebe` is the standalone game engine library repo for the `@blurengine/bebe` package, its source, tests, docs, and release surface.
 - The package root stays context-first. Additional public subpaths must be introduced intentionally and updated together with tests, package metadata, and README.
-- Use [docs/guides/engine-philosophy.md](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/docs/guides/engine-philosophy.md) as the north-star design guide when evaluating new features, API shape, and architectural tradeoffs.
+- Use [docs/guides/engine-philosophy.md](docs/guides/engine-philosophy.md) as the north-star design guide when evaluating new features, API shape, and architectural tradeoffs.
 - This file is for authoring `bebe` itself.
 
 ## Non-Negotiables

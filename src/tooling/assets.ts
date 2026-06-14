@@ -15,10 +15,22 @@ export type BebeToolingDiagnostic = {
     readonly sourcePath?: string;
 };
 
+export type BebeAssetSourceKind = "json" | "text";
+
+export type BebeAssetSourceMode = "single" | "collection";
+
+export type BebeAssetSourceFile = {
+    readonly relativePath: string;
+    readonly absolutePath: string;
+    readonly text: string;
+};
+
 export type BebeAssetCompilerInput = {
     readonly pipeline: BebePipelineIntent;
     readonly projectRoot: string;
-    readonly sourceJson: unknown;
+    readonly sourceJson?: unknown;
+    readonly sourceText?: string;
+    readonly sourceFiles?: readonly BebeAssetSourceFile[];
     readonly sourcePath: string;
     diagnosticSeverity?(
         category: BebeToolingDiagnosticCategory,
@@ -31,7 +43,15 @@ export type BebeAssetCompilerResult = {
     readonly diagnostics?: readonly BebeToolingDiagnostic[];
 };
 
-export type BebeAssetCompilerArtifactTarget = "behaviorPack" | "resourcePack";
+export type BebeAssetCompilerArtifactTarget =
+    | "behaviorPack"
+    | "resourcePack"
+    | "scripts";
+
+export type BebeAssetCompilerArtifactOutputPath = {
+    readonly target: BebeAssetCompilerArtifactTarget;
+    readonly outputPath: string;
+};
 
 export type BebeAssetCompilerArtifact = {
     readonly target: BebeAssetCompilerArtifactTarget;
@@ -48,6 +68,10 @@ export type BebeAssetCompiler = {
     readonly id: string;
     readonly sourcePaths: readonly string[];
     readonly outputPath: string;
+    readonly sourceKind?: BebeAssetSourceKind;
+    readonly sourceMode?: BebeAssetSourceMode;
+    readonly sourceFileExtensions?: readonly string[];
+    readonly artifactOutputPaths?: readonly BebeAssetCompilerArtifactOutputPath[];
     compile(input: BebeAssetCompilerInput): BebeAssetCompilerResult;
     renderBootstrap?(input: BebeAssetBootstrapInput): readonly string[];
 };

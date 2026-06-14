@@ -26,6 +26,9 @@
       "@blurengine/bebe/catalog": ["./src/catalog/index.ts"],
       "@blurengine/bebe/features/fishing": ["./src/features/fishing/index.ts"],
       "@blurengine/bebe/internal/link/bds": ["./src/internal/link/bds.ts"],
+      "@blurengine/bebe/internal/audio/player": [
+        "./src/internal/audio/player.ts"
+      ],
       "@blurengine/bebe/internal/zones/editor": [
         "./src/internal/zones/editor.ts"
       ],

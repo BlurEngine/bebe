@@ -27,6 +27,21 @@ export type {
     MetricsService,
     MetricsSnapshot,
 } from "./metrics.js";
+export { Audio } from "./audio.js";
+export type {
+    AudioDimensionTarget,
+    AudioPlayOptions,
+    AudioPlayback,
+    AudioService,
+    AudioSoundOptions,
+    AudioTarget,
+} from "./audio.js";
+export type {
+    AudioCompiledLoop,
+    AudioCompiledNote,
+    AudioCompiledPack,
+    AudioCompiledCue,
+} from "./audio/compiled.js";
 export * from "./stagger.js";
 export {
     ZONE_DRAFT_SAVE_EVENT,

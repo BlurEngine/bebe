@@ -7,6 +7,8 @@ These are the canonical guides for `@blurengine/bebe` and its public subpaths.
 - [Context Guide](./guides/context.md)
 - [Context Patterns](./guides/context-patterns.md)
 - [Stagger Guide](./guides/stagger.md)
+- [Audio Guide](./guides/audio.md)
+- [Audio Sound Design Guide](./guides/audio-sound-design.md)
 - [Zones Guide](./guides/zones.md)
 - [Bedrock Guide](./guides/bedrock.md)
 - [Techniques Guide](./guides/techniques.md)
@@ -24,6 +26,8 @@ These are the canonical guides for `@blurengine/bebe` and its public subpaths.
 - Start with the Context Guide if you are trying to understand ownership, cleanup, and runtime lifetimes.
 - Read Context Patterns next if you want concrete ways to structure feature scopes and services.
 - Read Stagger Guide when you want to stage owned work across ticks.
+- Read Audio Guide when you want hand-written BAUD sound cues compiled into runtime-loaded audio packs.
+- Read Audio Sound Design Guide when you are choosing Bedrock sound ids for BAUD voices.
 - Read Zones Guide when you want to register extents, query named areas, or watch zone membership by dimension.
 - Read Bedrock Guide when you want the engine to absorb API friction at the Bedrock edge.
 - Read Techniques Guide when you want goal-first Minecraft Bedrock patterns that use Bebe-owned runtime work.
@@ -43,6 +47,8 @@ These docs cover:
 - lifecycle ownership through `Context`
 - derived local events through `EventSignal`
 - root-level staggered runtime work
+- the root-level `Audio` singleton for context-owned playback of compiled BAUD audio packs
+- BAUD sound selection guidance for practical Bedrock sound ids
 - the root-level `Zones` singleton for dimension-partitioned area lookup and entity watching
 - the root-level `RenderAnchors` singleton for Bebe-owned distant entity-like visuals and carrier cleanup
 - the Bedrock edge helpers under `@blurengine/bebe/bedrock`

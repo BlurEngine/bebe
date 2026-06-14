@@ -46,6 +46,10 @@
       "types": "./lib/types/bebe-public.d.ts",
       "default": "./lib/internal/link/bds.js"
     },
+    "./internal/audio/player": {
+      "types": "./lib/types/bebe-public.d.ts",
+      "default": "./lib/internal/audio/player.js"
+    },
     "./internal/zones/editor": {
       "types": "./lib/types/bebe-public.d.ts",
       "default": "./lib/internal/zones/editor.js"

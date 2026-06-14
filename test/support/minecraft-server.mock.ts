@@ -197,6 +197,15 @@ export type Vector3 = {
     readonly z: number;
 };
 
+export type PlayedSound = {
+    readonly soundId: string;
+    readonly options?: {
+        readonly pitch?: number;
+        readonly volume?: number;
+        readonly location?: Vector3;
+    };
+};
+
 export type ItemStack = {
     readonly typeId: string;
     clone(): ItemStack;
@@ -263,6 +272,13 @@ export class Entity {
 
 export class Player extends Entity {
     readonly name: string;
+    readonly actionBarMessages: string[] = [];
+    readonly playedSounds: PlayedSound[] = [];
+    readonly onScreenDisplay = {
+        setActionBar: (text: string): void => {
+            this.actionBarMessages.push(text);
+        },
+    };
     selectedSlotIndex = 0;
 
     constructor(options: {
@@ -278,6 +294,17 @@ export class Player extends Entity {
             location: options.location,
         });
         this.name = options.name ?? options.id;
+    }
+
+    playSound(
+        soundId: string,
+        options?: {
+            readonly pitch?: number;
+            readonly volume?: number;
+            readonly location?: Vector3;
+        },
+    ): void {
+        this.playedSounds.push({ soundId, options });
     }
 }
 

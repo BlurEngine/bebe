@@ -35,6 +35,12 @@ export default defineConfig({
                 ),
             },
             {
+                find: /^@blurengine\/bebe\/internal\/audio\/player$/,
+                replacement: fileURLToPath(
+                    new URL("./src/internal/audio/player.ts", import.meta.url),
+                ),
+            },
+            {
                 find: /^@blurengine\/bebe\/internal\/zones\/editor$/,
                 replacement: fileURLToPath(
                     new URL("./src/internal/zones/editor.ts", import.meta.url),

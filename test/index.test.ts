@@ -6,6 +6,7 @@ import * as bedrock from "@blurengine/bebe/bedrock";
 import * as catalog from "@blurengine/bebe/catalog";
 import * as fishing from "@blurengine/bebe/features/fishing";
 import * as internalLinkBds from "@blurengine/bebe/internal/link/bds";
+import * as internalAudioPlayer from "@blurengine/bebe/internal/audio/player";
 import * as internalZonesEditor from "@blurengine/bebe/internal/zones/editor";
 import * as maths from "@blurengine/bebe/maths";
 import * as toolingNode from "@blurengine/bebe/tooling/node";
@@ -14,6 +15,7 @@ import {
     EventSignal,
     Link,
     Metrics,
+    Audio,
     ROOT_CONTEXT,
     RenderAnchors,
     RootContext,
@@ -43,6 +45,7 @@ describe("package root exports", () => {
                 "EventSignal",
                 "Link",
                 "Metrics",
+                "Audio",
                 "ROOT_CONTEXT",
                 "RenderAnchors",
                 "RootContext",
@@ -67,6 +70,7 @@ describe("package root exports", () => {
         expect(bebe.EventSignal).toBe(EventSignal);
         expect(bebe.Link).toBe(Link);
         expect(bebe.Metrics).toBe(Metrics);
+        expect(bebe.Audio).toBe(Audio);
         expect(bebe.ROOT_CONTEXT).toBe(ROOT_CONTEXT);
         expect(bebe.RenderAnchors).toBe(RenderAnchors);
         expect(bebe.RootContext).toBe(RootContext);
@@ -175,26 +179,50 @@ describe("package root exports", () => {
         );
     });
 
+    it("exposes the Bebe audio player command through the internal tooling subpath", () => {
+        expect(Object.keys(internalAudioPlayer).sort()).toEqual(
+            ["installAudioPlayerCommand", "parseAudioPlayerCommand"].sort(),
+        );
+    });
+
     it("exposes node-only Bebe tooling through its own subpath", () => {
         expect(Object.keys(toolingNode).sort()).toEqual(
             [
+                "BAUD_FILE_EXTENSION",
+                "DEFAULT_AUDIO_CENTS",
+                "DEFAULT_AUDIO_LENGTH",
+                "DEFAULT_AUDIO_OCTAVE",
+                "DEFAULT_AUDIO_PAN",
+                "DEFAULT_AUDIO_TEMPO",
+                "DEFAULT_AUDIO_VOLUME",
                 "DEFAULT_RENDER_ANCHOR_DIMENSION",
                 "DEFAULT_RENDER_ANCHOR_REPOSITION_THRESHOLD",
                 "DEFAULT_RENDER_ANCHOR_SEARCH_RADIUS",
                 "DEFAULT_ZONE_COMPILED_CELL_SIZE",
                 "DEFAULT_ZONE_COMPILED_MAX_CELLS_PER_ZONE",
+                "GENERATED_AUDIO_FILE",
+                "GENERATED_AUDIO_VISUALS_FILE",
                 "GENERATED_RENDER_ANCHORS_FILE",
                 "GENERATED_ZONES_FILE",
+                "AUDIO_COMPILED_FORMAT_VERSION",
+                "PROJECT_AUDIO_DIRECTORY",
                 "PROJECT_RENDER_ANCHORS_FILE",
                 "PROJECT_ZONES_FILE",
                 "ZONE_COMPILED_FORMAT_VERSION",
                 "ZONE_DRAFT_SAVE_EVENT",
+                "compileAudioSources",
+                "compileAudioSourcesWithVisuals",
+                "compileAudioText",
+                "compileAudioTextWithVisuals",
                 "compileRenderAnchorPack",
                 "compileZonePack",
                 "createBebeTooling",
                 "createDefaultRenderAnchorOutputEntity",
+                "createAudioAssetCompiler",
                 "createRenderAnchorsAssetCompiler",
                 "createZonesAssetCompiler",
+                "audioAssetCompiler",
+                "normalizeAudioCompiledPack",
                 "normalizeRenderAnchorDefinition",
                 "normalizeRenderAnchorPack",
                 "normalizeZoneCompiledPack",
@@ -246,6 +274,10 @@ describe("package root exports", () => {
             "./internal/link/bds": {
                 types: "./lib/types/bebe-public.d.ts",
                 default: "./lib/internal/link/bds.js",
+            },
+            "./internal/audio/player": {
+                types: "./lib/types/bebe-public.d.ts",
+                default: "./lib/internal/audio/player.js",
             },
             "./internal/zones/editor": {
                 types: "./lib/types/bebe-public.d.ts",

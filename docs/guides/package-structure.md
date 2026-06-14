@@ -27,6 +27,7 @@ Use it when you are choosing imports, navigating the codebase, or deciding where
 It also has internal subpaths used by `blr` for injected runtime wiring:
 
 - `@blurengine/bebe/internal/link/bds`
+- `@blurengine/bebe/internal/audio/player`
 - `@blurengine/bebe/internal/zones/editor`
 
 The root package stays focused on lifecycle, runtime ownership, and reusable
@@ -78,14 +79,15 @@ That split is intentional. It keeps the root package small while still letting t
 
 The public authored entrypoints are:
 
-- [src/index.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/index.ts)
-- [src/context.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/context.ts)
-- [src/zones.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/zones.ts)
-- [src/catalog/index.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/catalog/index.ts)
-- [src/maths/index.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/maths/index.ts)
-- [src/tooling/node.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/tooling/node.ts)
-- [src/internal/link/bds.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/internal/link/bds.ts)
-- [src/internal/zones/editor.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/internal/zones/editor.ts)
+- [src/index.ts](../../src/index.ts)
+- [src/context.ts](../../src/context.ts)
+- [src/zones.ts](../../src/zones.ts)
+- [src/catalog/index.ts](../../src/catalog/index.ts)
+- [src/maths/index.ts](../../src/maths/index.ts)
+- [src/tooling/node.ts](../../src/tooling/node.ts)
+- [src/internal/link/bds.ts](../../src/internal/link/bds.ts)
+- [src/internal/audio/player.ts](../../src/internal/audio/player.ts)
+- [src/internal/zones/editor.ts](../../src/internal/zones/editor.ts)
 
 As a consumer, the important import paths are:
 
@@ -96,6 +98,7 @@ As a consumer, the important import paths are:
 - `@blurengine/bebe/maths`
 - `@blurengine/bebe/tooling/node` for Node build tooling only
 - `@blurengine/bebe/internal/link/bds` for `blr` runtime injection only
+- `@blurengine/bebe/internal/audio/player` for `blr` dev audio command injection only
 - `@blurengine/bebe/internal/zones/editor` for `blr` editor injection only
 
 ### `src/`
@@ -104,16 +107,16 @@ This is the authored source tree.
 
 Current top-level authored areas:
 
-- [src/context.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/context.ts) for lifecycle ownership
-- [src/stagger.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/stagger.ts) for staged owned work
-- [src/zones.ts](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/zones.ts) for the singleton zone registry and watcher surface
-- [`src/zones/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/zones) for shared serialisable zone definitions, compiled lookup metadata, and draft editing primitives
-- [`src/bedrock/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/bedrock) for Bedrock API edge helpers
-- [`src/catalog/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/catalog) for block catalogs and vanilla block categories
-- [`src/maths/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/maths) for the maths surface, including voxel/grid helpers
-- [`src/tooling/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/tooling) for Node-only compiler/tooling entrypoints
-- [`src/internal/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/internal) for package subpaths injected by `blr`, not gameplay imports
-- [`src/test-support/`](d:/Users/supah/Documents/programming/go/src/gitlab.com/Blockception/personal/bebe/src/test-support) for test-only helpers
+- [src/context.ts](../../src/context.ts) for lifecycle ownership
+- [src/stagger.ts](../../src/stagger.ts) for staged owned work
+- [src/zones.ts](../../src/zones.ts) for the singleton zone registry and watcher surface
+- [`src/zones/`](../../src/zones) for shared serialisable zone definitions, compiled lookup metadata, and draft editing primitives
+- [`src/bedrock/`](../../src/bedrock) for Bedrock API edge helpers
+- [`src/catalog/`](../../src/catalog) for block catalogs and vanilla block categories
+- [`src/maths/`](../../src/maths) for the maths surface, including voxel/grid helpers
+- [`src/tooling/`](../../src/tooling) for Node-only compiler/tooling entrypoints
+- [`src/internal/`](../../src/internal) for package subpaths injected by `blr`, not gameplay imports
+- [`src/test-support/`](../../src/test-support) for test-only helpers
 
 ### `test/`
 

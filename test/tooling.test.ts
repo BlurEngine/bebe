@@ -8,6 +8,13 @@ import {
 describe("Bebe tooling", () => {
     it("exposes the zone asset compiler through the node tooling subpath", () => {
         const tooling = createBebeTooling();
+
+        expect(tooling.assetCompilers.map((compiler) => compiler.id)).toEqual([
+            "bebe:zones",
+            "bebe:render-anchors",
+            "bebe:audio",
+        ]);
+
         const compiler = tooling.assetCompilers.find(
             (candidate) => candidate.id === "bebe:zones",
         );

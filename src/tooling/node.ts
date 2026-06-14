@@ -1,14 +1,19 @@
 import type { BebeTooling } from "./assets.js";
+import { createAudioAssetCompiler } from "./audio.js";
 import { createRenderAnchorsAssetCompiler } from "./render-anchors.js";
 import { createZonesAssetCompiler } from "./zones.js";
 
 export type {
     BebeAssetCompilerArtifact,
+    BebeAssetCompilerArtifactOutputPath,
     BebeAssetCompilerArtifactTarget,
     BebeAssetBootstrapInput,
     BebeAssetCompiler,
     BebeAssetCompilerInput,
     BebeAssetCompilerResult,
+    BebeAssetSourceFile,
+    BebeAssetSourceKind,
+    BebeAssetSourceMode,
     BebePipelineIntent,
     BebeTooling,
     BebeToolingDiagnostic,
@@ -79,6 +84,43 @@ export type {
     RenderAnchorPropertyValue,
 } from "../render-anchors/definitions.js";
 export {
+    BAUD_FILE_EXTENSION,
+    DEFAULT_AUDIO_CENTS,
+    DEFAULT_AUDIO_LENGTH,
+    DEFAULT_AUDIO_OCTAVE,
+    DEFAULT_AUDIO_PAN,
+    DEFAULT_AUDIO_TEMPO,
+    DEFAULT_AUDIO_VOLUME,
+    GENERATED_AUDIO_FILE,
+    GENERATED_AUDIO_VISUALS_FILE,
+    PROJECT_AUDIO_DIRECTORY,
+    compileAudioSources,
+    compileAudioSourcesWithVisuals,
+    compileAudioText,
+    compileAudioTextWithVisuals,
+} from "../audio/definitions.js";
+export type {
+    CompileAudioTextOptions,
+    AudioSourceFile,
+    AudioTextCompilationWithVisuals,
+    AudioVisualPack,
+    AudioVisualCue,
+    AudioVisualToken,
+    AudioVisualTokenKind,
+    AudioVisualVoice,
+} from "../audio/definitions.js";
+export { createAudioAssetCompiler, audioAssetCompiler } from "./audio.js";
+export {
+    AUDIO_COMPILED_FORMAT_VERSION,
+    normalizeAudioCompiledPack,
+} from "../audio/compiled.js";
+export type {
+    AudioCompiledLoop,
+    AudioCompiledNote,
+    AudioCompiledPack,
+    AudioCompiledCue,
+} from "../audio/compiled.js";
+export {
     createRenderAnchorsAssetCompiler,
     renderAnchorsAssetCompiler,
 } from "./render-anchors.js";
@@ -88,6 +130,7 @@ export function createBebeTooling(): BebeTooling {
         assetCompilers: [
             createZonesAssetCompiler(),
             createRenderAnchorsAssetCompiler(),
+            createAudioAssetCompiler(),
         ],
     };
 }
