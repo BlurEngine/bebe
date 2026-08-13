@@ -8,12 +8,14 @@ import * as fishing from "@blurengine/bebe/features/fishing";
 import * as internalLinkBds from "@blurengine/bebe/internal/link/bds";
 import * as internalAudioPlayer from "@blurengine/bebe/internal/audio/player";
 import * as internalZonesEditor from "@blurengine/bebe/internal/zones/editor";
+import * as locations from "@blurengine/bebe/locations";
 import * as maths from "@blurengine/bebe/maths";
 import * as toolingNode from "@blurengine/bebe/tooling/node";
 import {
     Context,
     EventSignal,
     Link,
+    Locations,
     Metrics,
     Audio,
     ROOT_CONTEXT,
@@ -44,6 +46,7 @@ describe("package root exports", () => {
                 "Context",
                 "EventSignal",
                 "Link",
+                "Locations",
                 "Metrics",
                 "Audio",
                 "ROOT_CONTEXT",
@@ -69,6 +72,7 @@ describe("package root exports", () => {
         expect(bebe.Context).toBe(Context);
         expect(bebe.EventSignal).toBe(EventSignal);
         expect(bebe.Link).toBe(Link);
+        expect(bebe.Locations).toBe(Locations);
         expect(bebe.Metrics).toBe(Metrics);
         expect(bebe.Audio).toBe(Audio);
         expect(bebe.ROOT_CONTEXT).toBe(ROOT_CONTEXT);
@@ -158,6 +162,17 @@ describe("package root exports", () => {
         );
     });
 
+    it("exposes authored locations without loading the Bedrock runtime root", () => {
+        expect(Object.keys(locations).sort()).toEqual(
+            [
+                "LOCATION_PACK_FORMAT_VERSION",
+                "Locations",
+                "normalizeLocationDefinition",
+                "normalizeLocationPack",
+            ].sort(),
+        );
+    });
+
     it("exposes the BDS Link transport through the internal tooling subpath", () => {
         expect(Object.keys(internalLinkBds).sort()).toEqual(
             [
@@ -195,6 +210,7 @@ describe("package root exports", () => {
                 "DEFAULT_AUDIO_PAN",
                 "DEFAULT_AUDIO_TEMPO",
                 "DEFAULT_AUDIO_VOLUME",
+                "DEFAULT_CATMULL_ROM_SUBDIVISIONS",
                 "DEFAULT_RENDER_ANCHOR_DIMENSION",
                 "DEFAULT_RENDER_ANCHOR_REPOSITION_THRESHOLD",
                 "DEFAULT_RENDER_ANCHOR_SEARCH_RADIUS",
@@ -202,36 +218,54 @@ describe("package root exports", () => {
                 "DEFAULT_ZONE_COMPILED_MAX_CELLS_PER_ZONE",
                 "GENERATED_AUDIO_FILE",
                 "GENERATED_AUDIO_VISUALS_FILE",
+                "GENERATED_LOCATIONS_FILE",
                 "GENERATED_RENDER_ANCHORS_FILE",
                 "GENERATED_ZONES_FILE",
                 "AUDIO_COMPILED_FORMAT_VERSION",
+                "LOCATION_PACK_FORMAT_VERSION",
+                "PATH_PACK_FORMAT_VERSION",
                 "PROJECT_AUDIO_DIRECTORY",
+                "PROJECT_LOCATIONS_FILE",
                 "PROJECT_RENDER_ANCHORS_FILE",
                 "PROJECT_ZONES_FILE",
                 "ZONE_COMPILED_FORMAT_VERSION",
                 "ZONE_DRAFT_SAVE_EVENT",
+                "compileCatmullRom",
                 "compileAudioSources",
                 "compileAudioSourcesWithVisuals",
                 "compileAudioText",
                 "compileAudioTextWithVisuals",
                 "compileRenderAnchorPack",
+                "compilePathDefinition",
+                "compilePolyline",
                 "compileZonePack",
                 "convertMidiToBaud",
                 "convertMidiToBaudWithDiagnostics",
                 "createBebeTooling",
                 "createDefaultRenderAnchorOutputEntity",
                 "createAudioAssetCompiler",
+                "createLocationsAssetCompiler",
                 "createRenderAnchorsAssetCompiler",
                 "createZonesAssetCompiler",
                 "audioAssetCompiler",
+                "getVoxelKey",
+                "locationsAssetCompiler",
                 "normalizeAudioCompiledPack",
+                "normalizeLocationDefinition",
+                "normalizeLocationPack",
+                "normalizePathDefinition",
+                "normalizePathPack",
                 "normalizeRenderAnchorDefinition",
                 "normalizeRenderAnchorPack",
                 "normalizeZoneCompiledPack",
                 "normalizeZoneDefinition",
                 "normalizeZoneExtentDefinition",
                 "normalizeZonePack",
+                "parseMarkerText",
+                "parseVoxelKey",
+                "inverseRotateVoxelOffsetByQuarterTurns",
                 "renderAnchorsAssetCompiler",
+                "rotateVoxelOffsetByQuarterTurns",
                 "sanitizeRenderAnchorName",
                 "validateZoneReferences",
                 "zonesAssetCompiler",
@@ -264,6 +298,10 @@ describe("package root exports", () => {
             "./maths": {
                 types: "./lib/types/bebe-public.d.ts",
                 default: "./lib/maths/index.js",
+            },
+            "./locations": {
+                types: "./lib/types/bebe-public.d.ts",
+                default: "./lib/locations.js",
             },
             "./catalog": {
                 types: "./lib/types/bebe-public.d.ts",

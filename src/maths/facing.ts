@@ -1,4 +1,4 @@
-import { Direction } from "@minecraft/server";
+import type { Direction } from "@minecraft/server";
 import { Vec3 } from "./vec3.js";
 
 /**
@@ -7,24 +7,40 @@ import { Vec3 } from "./vec3.js";
  * In `bebe`, a facing means one of the six unit block offsets around an origin
  * block. This is intentionally narrower than arbitrary direction vectors.
  */
-export { Direction as Facing };
+export type Facing = Direction;
 
-const FACING_ORDER: readonly Direction[] = [
-    Direction.Down,
-    Direction.East,
-    Direction.North,
-    Direction.South,
-    Direction.Up,
-    Direction.West,
+/**
+ * Runtime-safe values for Bedrock's string-valued {@link Direction} enum.
+ *
+ * Keeping the value locally avoids loading `@minecraft/server` when pure maths
+ * is consumed by build tooling or tests. The exported type remains Bedrock's
+ * own `Direction`, so script consumers keep the same API contract.
+ */
+export const Facing = Object.freeze({
+    Down: "Down" as Direction.Down,
+    East: "East" as Direction.East,
+    North: "North" as Direction.North,
+    South: "South" as Direction.South,
+    Up: "Up" as Direction.Up,
+    West: "West" as Direction.West,
+}) satisfies Readonly<Record<keyof typeof Direction, Direction>>;
+
+const FACING_ORDER: readonly Facing[] = [
+    Facing.Down,
+    Facing.East,
+    Facing.North,
+    Facing.South,
+    Facing.Up,
+    Facing.West,
 ];
 
-const FACING_OFFSET_BY_DIRECTION: Readonly<Record<Direction, Vec3>> = {
-    [Direction.Down]: Vec3.down(),
-    [Direction.East]: Vec3.right(),
-    [Direction.North]: Vec3.forward(),
-    [Direction.South]: Vec3.back(),
-    [Direction.Up]: Vec3.up(),
-    [Direction.West]: Vec3.left(),
+const FACING_OFFSET_BY_DIRECTION: Readonly<Record<Facing, Vec3>> = {
+    [Facing.Down]: Vec3.down(),
+    [Facing.East]: Vec3.right(),
+    [Facing.North]: Vec3.forward(),
+    [Facing.South]: Vec3.back(),
+    [Facing.Up]: Vec3.up(),
+    [Facing.West]: Vec3.left(),
 };
 
 /**
@@ -42,18 +58,18 @@ export const FACING_OFFSETS: readonly Vec3[] = FACING_ORDER.map(
  * order.
  */
 export const HORIZONTAL_FACING_OFFSETS: readonly Vec3[] = [
-    FACING_OFFSET_BY_DIRECTION[Direction.East],
-    FACING_OFFSET_BY_DIRECTION[Direction.North],
-    FACING_OFFSET_BY_DIRECTION[Direction.South],
-    FACING_OFFSET_BY_DIRECTION[Direction.West],
+    FACING_OFFSET_BY_DIRECTION[Facing.East],
+    FACING_OFFSET_BY_DIRECTION[Facing.North],
+    FACING_OFFSET_BY_DIRECTION[Facing.South],
+    FACING_OFFSET_BY_DIRECTION[Facing.West],
 ];
 
 /**
  * Vertical block-adjacent offsets in `Down`, `Up` order.
  */
 export const VERTICAL_FACING_OFFSETS: readonly Vec3[] = [
-    FACING_OFFSET_BY_DIRECTION[Direction.Down],
-    FACING_OFFSET_BY_DIRECTION[Direction.Up],
+    FACING_OFFSET_BY_DIRECTION[Facing.Down],
+    FACING_OFFSET_BY_DIRECTION[Facing.Up],
 ];
 
 /**

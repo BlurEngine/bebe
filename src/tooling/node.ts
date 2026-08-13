@@ -1,7 +1,57 @@
 import type { BebeTooling } from "./assets.js";
 import { createAudioAssetCompiler } from "./audio.js";
+import { createLocationsAssetCompiler } from "./locations.js";
 import { createRenderAnchorsAssetCompiler } from "./render-anchors.js";
 import { createZonesAssetCompiler } from "./zones.js";
+
+export {
+    inverseRotateVoxelOffsetByQuarterTurns,
+    rotateVoxelOffsetByQuarterTurns,
+} from "../maths/voxel-transform.js";
+export type { HorizontalQuarterTurn } from "../maths/voxel-transform.js";
+export { getVoxelKey, parseVoxelKey } from "../maths/voxel-key.js";
+export type { VoxelKey } from "../maths/voxel-key.js";
+export {
+    PATH_PACK_FORMAT_VERSION,
+    compilePathDefinition,
+    normalizePathDefinition,
+    normalizePathPack,
+} from "../maths/path-definitions.js";
+export {
+    DEFAULT_CATMULL_ROM_SUBDIVISIONS,
+    compileCatmullRom,
+    compilePolyline,
+} from "../maths/path.js";
+export type {
+    CatmullRomPathDefinition,
+    CompiledCatmullRomPathDefinition,
+    CompiledPathDefinition,
+    CompiledPathPack,
+    CompiledPolylinePathDefinition,
+    PathDefinition,
+    PathPack,
+    PolylinePathDefinition,
+} from "../maths/path-definitions.js";
+export type {
+    ArcLengthPath,
+    CatmullRomOptions,
+    PathSample,
+} from "../maths/path.js";
+
+export {
+    GENERATED_LOCATIONS_FILE,
+    LOCATION_PACK_FORMAT_VERSION,
+    PROJECT_LOCATIONS_FILE,
+    normalizeLocationDefinition,
+    normalizeLocationPack,
+} from "../locations/definitions.js";
+export type {
+    CompiledLocationDefinition,
+    CompiledLocationPack,
+    LocationDefinition,
+    LocationPack,
+    NormalizeLocationPackOptions,
+} from "../locations/definitions.js";
 
 export type {
     BebeAssetCompilerArtifact,
@@ -123,6 +173,11 @@ export type {
 } from "../audio/midi.js";
 export { createAudioAssetCompiler, audioAssetCompiler } from "./audio.js";
 export {
+    createLocationsAssetCompiler,
+    locationsAssetCompiler,
+    parseMarkerText,
+} from "./locations.js";
+export {
     AUDIO_COMPILED_FORMAT_VERSION,
     normalizeAudioCompiledPack,
 } from "../audio/compiled.js";
@@ -141,6 +196,7 @@ export function createBebeTooling(): BebeTooling {
     return {
         assetCompilers: [
             createZonesAssetCompiler(),
+            createLocationsAssetCompiler(),
             createRenderAnchorsAssetCompiler(),
             createAudioAssetCompiler(),
         ],

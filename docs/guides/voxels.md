@@ -51,12 +51,18 @@ The most important helpers are:
 - `createFacingVoxelOffsets(...)`
 - `floodFillVoxels(...)`
 - `floodFillVoxelSet(...)`
+- `rotateVoxelOffset(...)`
+- `inverseRotateVoxelOffset(...)`
 
 ## Important Behaviours
 
 ### Keys
 
 `getVoxelKey(...)` returns a stable `x,y,z` string for one voxel location.
+Build-time tooling that must not load the Bedrock runtime may import
+`getVoxelKey(...)`, `parseVoxelKey(...)`, and the pure quarter-turn helpers from
+`@blurengine/bebe/tooling/node`. The regular maths export remains the gameplay
+surface for voxel collections and facing-aware traversal.
 
 It accepts any `Vec3Like`, including Bedrock `{ x, y, z }` objects.
 
@@ -196,6 +202,23 @@ offsets in the layer above.
 `FACE_VOXEL_OFFSETS` and `SURROUNDING_VOXEL_OFFSETS` still exist as
 compatibility aliases, but new code should prefer the maths-facing names.
 
+### Quarter-Turn Local Offsets
+
+`rotateVoxelOffset(...)` treats local north as the authored forward direction
+and rotates one integer offset towards a horizontal `Facing`.
+`inverseRotateVoxelOffset(...)` recovers the authored local offset. Both keep
+Y unchanged and reject vertical facings or non-integer coordinates.
+
+These are intentionally only grid transforms. They do not define blocks,
+parts, furniture, blueprints, placement transactions, or runtime ownership.
+
+Build tools that do not load the Bedrock runtime can use
+`rotateVoxelOffsetByQuarterTurns(...)` and
+`inverseRotateVoxelOffsetByQuarterTurns(...)` from
+`@blurengine/bebe/tooling/node`. Their `HorizontalQuarterTurn` input uses `0`
+for north, `1` for east, `2` for south, and `3` for west. The same pure helpers
+also remain available from the maths surface for runtime consumers.
+
 ## Choosing The Right API
 
 - block-adjacent facings, voxel helpers, and surrounding offsets -> `@blurengine/bebe/maths`
@@ -208,6 +231,8 @@ compatibility aliases, but new code should prefer the maths-facing names.
 - surrounding traversal -> `SURROUNDING_OFFSETS`
 - scaled or origin-inclusive surrounding traversal -> `createSurroundingOffsets(...)`
 - one `3x3` face plane such as `up` or `south` -> `createFacingVoxelOffsets(...)`
+- rotate sparse local grid cells for a horizontal facing -> `rotateVoxelOffset(...)`
+- rotate sparse local grid cells in a Node build tool -> `rotateVoxelOffsetByQuarterTurns(...)`
 - reusable breadth-first voxel capture -> `floodFillVoxels(...)`
 - reusable breadth-first voxel capture inside an existing voxel set -> `floodFillVoxelSet(...)`
 
