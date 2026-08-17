@@ -1,10 +1,14 @@
-import { FACING_OFFSETS, SURROUNDING_OFFSETS } from "./facing.js";
+import { Facing, FACING_OFFSETS, SURROUNDING_OFFSETS } from "./facing.js";
 import { Vec3, type Vec3Init, type Vec3Like, type Vec3Tuple } from "./vec3.js";
+import {
+    inverseRotateVoxelOffsetByQuarterTurns,
+    rotateVoxelOffsetByQuarterTurns,
+    type HorizontalQuarterTurn,
+} from "./voxel-transform.js";
+import { getVoxelKey, parseVoxelKey, type VoxelKey } from "./voxel-key.js";
 
-/**
- * Canonical string key for one voxel location.
- */
-export type VoxelKey = string;
+export { getVoxelKey, parseVoxelKey } from "./voxel-key.js";
+export type { VoxelKey } from "./voxel-key.js";
 
 /**
  * Seed location for a voxel flood fill.
@@ -211,6 +215,64 @@ export const FACE_VOXEL_OFFSETS: readonly Vec3[] = FACING_OFFSETS;
 export const SURROUNDING_VOXEL_OFFSETS: readonly Vec3[] = SURROUNDING_OFFSETS;
 
 /**
+ * Rotate one integer local voxel offset so local north faces `facing`.
+ *
+ * This is a pure grid transform. It does not assign block, part, placement,
+ * or content semantics to the offset.
+ */
+export function rotateVoxelOffset(offset: Vec3Like, facing: Facing): Vec3 {
+    const point = expectIntegerVoxelOffset(offset, "rotateVoxelOffset");
+    return rotateVoxelOffsetByQuarterTurns(
+        point,
+        getFacingQuarterTurn(facing, "rotateVoxelOffset"),
+    );
+}
+
+/** Reverse {@link rotateVoxelOffset} for the same horizontal facing. */
+export function inverseRotateVoxelOffset(
+    offset: Vec3Like,
+    facing: Facing,
+): Vec3 {
+    const point = expectIntegerVoxelOffset(offset, "inverseRotateVoxelOffset");
+    return inverseRotateVoxelOffsetByQuarterTurns(
+        point,
+        getFacingQuarterTurn(facing, "inverseRotateVoxelOffset"),
+    );
+}
+
+function getFacingQuarterTurn(
+    facing: Facing,
+    caller: string,
+): HorizontalQuarterTurn {
+    switch (facing) {
+        case Facing.North:
+            return 0;
+        case Facing.East:
+            return 1;
+        case Facing.South:
+            return 2;
+        case Facing.West:
+            return 3;
+        default:
+            throw new RangeError(`${caller} requires a horizontal Facing.`);
+    }
+}
+
+function expectIntegerVoxelOffset(offset: Vec3Like, caller: string): Vec3 {
+    const point = Array.isArray(offset)
+        ? { x: offset[0], y: offset[1], z: offset[2] }
+        : (offset as Vec3Init);
+    if (
+        !Number.isInteger(point.x) ||
+        !Number.isInteger(point.y) ||
+        !Number.isInteger(point.z)
+    ) {
+        throw new RangeError(`${caller} requires integer voxel coordinates.`);
+    }
+    return new Vec3(point);
+}
+
+/**
  * Returns the `3x3` voxel face one block away in the provided face direction.
  *
  * The direction must be one of {@link FACING_OFFSETS}. For example:
@@ -256,34 +318,6 @@ export function createFacingVoxelOffsets(direction: Vec3Like): Vec3[] {
     }
 
     return offsets;
-}
-
-/**
- * Returns a stable key for a voxel location.
- */
-export function getVoxelKey(location: Vec3Like): VoxelKey {
-    const { x, y, z } = getVec3Components(location);
-
-    return `${x},${y},${z}`;
-}
-
-/**
- * Parses a voxel key produced by {@link getVoxelKey}.
- *
- * Returns `undefined` when the key does not contain three finite coordinates.
- */
-export function parseVoxelKey(key: VoxelKey): Vec3 | undefined {
-    const parts = key.split(",");
-    if (parts.length !== 3) {
-        return undefined;
-    }
-
-    const [x, y, z] = parts.map(Number);
-    if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) {
-        return undefined;
-    }
-
-    return new Vec3(x, y, z);
 }
 
 /**

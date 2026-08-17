@@ -34,6 +34,10 @@
       "types": "./lib/types/bebe-public.d.ts",
       "default": "./lib/maths/index.js"
     },
+    "./locations": {
+      "types": "./lib/types/bebe-public.d.ts",
+      "default": "./lib/locations.js"
+    },
     "./catalog": {
       "types": "./lib/types/bebe-public.d.ts",
       "default": "./lib/catalog/index.js"

@@ -15,12 +15,13 @@ Use it when you are choosing imports, navigating the codebase, or deciding where
 
 ## Core Model
 
-`bebe` has six authored package surfaces today:
+`bebe` has seven authored package surfaces today:
 
 - `@blurengine/bebe`
 - `@blurengine/bebe/bedrock`
 - `@blurengine/bebe/catalog`
 - `@blurengine/bebe/features/fishing`
+- `@blurengine/bebe/locations`
 - `@blurengine/bebe/maths`
 - `@blurengine/bebe/tooling/node`
 
@@ -52,6 +53,10 @@ The fishing feature subpath holds:
 - derived vanilla fishing events
 - hook session tracking
 - catch item helpers
+
+The locations subpath holds the static authored-location registry and pure
+location-pack normalisers. It is suitable for tools and tests that need exact
+location data without loading the Bedrock runtime root.
 
 The maths subpath holds:
 
@@ -95,6 +100,7 @@ As a consumer, the important import paths are:
 - `@blurengine/bebe/bedrock`
 - `@blurengine/bebe/catalog`
 - `@blurengine/bebe/features/fishing`
+- `@blurengine/bebe/locations`
 - `@blurengine/bebe/maths`
 - `@blurengine/bebe/tooling/node` for Node build tooling only
 - `@blurengine/bebe/internal/link/bds` for `blr` runtime injection only
@@ -157,6 +163,7 @@ It is the package build result, not the authored source of truth.
 - Bedrock API edge helpers -> `@blurengine/bebe/bedrock`
 - immutable block catalogs and the vanilla block preset -> `@blurengine/bebe/catalog`
 - derived vanilla fishing events -> `@blurengine/bebe/features/fishing`
+- authored location packs and the static location registry -> `@blurengine/bebe/locations`
 - vectors, facings, AABBs, extents, voxel/grid helpers, tweens, and numeric helpers -> `@blurengine/bebe/maths`
 - Node-only build/compiler integration -> `@blurengine/bebe/tooling/node`
 - `blr`-owned runtime wiring -> `@blurengine/bebe/internal/*`

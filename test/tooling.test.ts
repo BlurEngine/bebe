@@ -11,6 +11,7 @@ describe("Bebe tooling", () => {
 
         expect(tooling.assetCompilers.map((compiler) => compiler.id)).toEqual([
             "bebe:zones",
+            "bebe:locations",
             "bebe:render-anchors",
             "bebe:audio",
         ]);

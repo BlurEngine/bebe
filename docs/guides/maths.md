@@ -11,6 +11,7 @@ It provides:
 - AABB utilities for spatial work
 - extent primitives for reusable area and volume definitions
 - voxel/grid helpers for location-first collections, stable keys, and breadth-first traversal
+- deterministic three-dimensional paths sampled by world distance
 - tween helpers for tick-based interpolation
 - scalar helpers for common numeric jobs
 
@@ -20,6 +21,7 @@ It provides:
 - code needs a stable vocabulary for block-adjacent offsets
 - code needs to express a reusable area, volume, or spatial membership rule
 - code needs voxel collections, stable location keys, or breadth-first grid traversal
+- motion or placement needs one deterministic 3D polyline or Catmull-Rom path
 - a feature needs tweening over Bedrock ticks
 - scalar helper functions are enough and a full class wrapper would be unnecessary
 - Bedrock API values need light interop without building a second maths vocabulary around them
@@ -35,6 +37,7 @@ The package has one main split:
 - voxel/grid helpers live beside the main maths types because they are spatial
   traversal helpers over the same `Vec3` model
 - raw utility functions exist for Bedrock interop, scalar queries, and low-allocation edge work
+- arc-length paths compile authored points into immutable distance-based samples and bounds
 
 This keeps authored gameplay code readable, while still leaving raw helpers in
 place for Bedrock interop and non-vector numeric work.
@@ -59,8 +62,10 @@ a Bedrock `{ x, y, z }` shape and only need one vector query, wrap it in
 `Facing` is `bebe`'s word for the six unit block offsets around one origin
 block.
 
-It builds directly on Bedrock's `Direction` enum, but uses engine vocabulary so
-future code can distinguish:
+Its type remains Bedrock's `Direction` enum and its values match that enum
+exactly. The public maths module defines those string values locally so pure
+maths can also load in Node without a Minecraft runtime. Engine vocabulary can
+therefore distinguish:
 
 - `Facing` for block-adjacent offsets
 - `direction` for arbitrary vectors or look/orientation math
@@ -185,6 +190,32 @@ Built-in extents expose conservative broad-phase helpers. In particular,
 `classifyAABB(...)` only returns `"inside"` when the shape can prove the whole
 box is contained. When that proof is not cheap or not possible, the extent
 returns `"intersects"` so callers can fall back to exact checks.
+
+### Arc-Length Paths
+
+`compilePolyline(...)` and `compileCatmullRom(...)` return an `ArcLengthPath`.
+The path measures full 3D Euclidean distance, so slopes contribute to length.
+
+- `sample(distance)` returns a `Vec3` position and tangent plus segment details
+- open paths return `undefined` outside `[0, length]`
+- closed paths wrap positive and negative distances
+- `bounds(start, end)` returns an `AABB` for the exact interval
+- consecutive zero-length segments and non-finite points are rejected
+- non-consecutive repeated points remain valid for crossings and return paths
+
+Catmull-Rom compilation is centripetal (`alpha = 0.5`) with a fixed authored
+subdivision count. Open endpoints use reflected phantom controls; closed paths
+wrap their controls and require at least three points. A two-point open spline
+remains exactly linear.
+
+`PathPack` is the versioned, consumer-neutral JSON contract. It stores plain
+`Vec3Init` points and no dimensions, schedules, vehicles, gameplay metadata,
+or registry state. Consumers compile the selected definition once with
+`compilePathDefinition(...)`.
+
+Offline world processors may import the same path normalisers and compilers
+from `@blurengine/bebe/tooling/node`. That entrypoint exposes the pure path
+contract without loading Bedrock-facing maths modules into Node.
 
 ### Tweens
 

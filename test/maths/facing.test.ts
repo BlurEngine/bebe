@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { execFileSync } from "node:child_process";
 import {
     Facing,
     FACING_OFFSETS,
@@ -10,6 +11,20 @@ import {
 } from "@blurengine/bebe/maths";
 
 describe("maths/Facing", () => {
+    it("loads the public maths barrel without a Bedrock runtime", () => {
+        expect(() =>
+            execFileSync(
+                process.execPath,
+                [
+                    "--input-type=module",
+                    "--eval",
+                    "await import('./lib/maths/index.js')",
+                ],
+                { cwd: process.cwd(), stdio: "pipe" },
+            ),
+        ).not.toThrow();
+    });
+
     it("re-exports Bedrock Direction under the Facing name", () => {
         expect(Facing.Down).toBe("Down");
         expect(Facing.East).toBe("East");

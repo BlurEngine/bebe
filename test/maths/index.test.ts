@@ -22,12 +22,20 @@ import {
     boxExtent,
     createFacingVoxelOffsets,
     createSurroundingOffsets,
+    compileCatmullRom,
+    compilePathDefinition,
+    compilePolyline,
     cylinderExtent,
     floodFillVoxelSet,
     floodFillVoxels,
     getVoxelKey,
     infiniteExtent,
+    inverseRotateVoxelOffset,
+    inverseRotateVoxelOffsetByQuarterTurns,
     parseVoxelKey,
+    rotateVoxelOffset,
+    rotateVoxelOffsetByQuarterTurns,
+    normalizePathPack,
     sphereExtent,
     translatedExtent,
     tweenNumber,
@@ -61,12 +69,24 @@ describe("maths barrel exports", () => {
         expect(maths.boxExtent).toBe(boxExtent);
         expect(maths.createFacingVoxelOffsets).toBe(createFacingVoxelOffsets);
         expect(maths.createSurroundingOffsets).toBe(createSurroundingOffsets);
+        expect(maths.compileCatmullRom).toBe(compileCatmullRom);
+        expect(maths.compilePathDefinition).toBe(compilePathDefinition);
+        expect(maths.compilePolyline).toBe(compilePolyline);
         expect(maths.cylinderExtent).toBe(cylinderExtent);
         expect(maths.floodFillVoxelSet).toBe(floodFillVoxelSet);
         expect(maths.floodFillVoxels).toBe(floodFillVoxels);
         expect(maths.getVoxelKey).toBe(getVoxelKey);
         expect(maths.infiniteExtent).toBe(infiniteExtent);
+        expect(maths.inverseRotateVoxelOffset).toBe(inverseRotateVoxelOffset);
+        expect(maths.inverseRotateVoxelOffsetByQuarterTurns).toBe(
+            inverseRotateVoxelOffsetByQuarterTurns,
+        );
         expect(maths.parseVoxelKey).toBe(parseVoxelKey);
+        expect(maths.rotateVoxelOffset).toBe(rotateVoxelOffset);
+        expect(maths.rotateVoxelOffsetByQuarterTurns).toBe(
+            rotateVoxelOffsetByQuarterTurns,
+        );
+        expect(maths.normalizePathPack).toBe(normalizePathPack);
         expect(maths.sphereExtent).toBe(sphereExtent);
         expect(maths.translatedExtent).toBe(translatedExtent);
         expect(maths.Vec2).toBe(Vec2);

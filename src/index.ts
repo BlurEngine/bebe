@@ -43,6 +43,16 @@ export type {
     AudioCompiledCue,
 } from "./audio/compiled.js";
 export * from "./stagger.js";
+export { Locations } from "./locations.js";
+export type {
+    CompiledLocationDefinition,
+    CompiledLocationPack,
+    LocationDefinition,
+    LocationPack,
+    LocationReference,
+    LocationsService,
+    NormalizeLocationPackOptions,
+} from "./locations.js";
 export {
     ZONE_DRAFT_SAVE_EVENT,
     ZoneDraft,
