@@ -1157,6 +1157,7 @@
   {"id":"minecraft:sulfur_bricks","tags":["family:sulfur","family:sulfur_brick"]},
   {"id":"minecraft:sulfur_double_slab","tags":["family:sulfur","kind:double_slab","kind:slab"]},
   {"id":"minecraft:sulfur_slab","tags":["family:sulfur","kind:slab"]},
+  {"id":"minecraft:sulfur_spike","tags":["family:sulfur"]},
   {"id":"minecraft:sulfur_stairs","tags":["family:sulfur","kind:stairs"]},
   {"id":"minecraft:sulfur_wall","tags":["family:sulfur","kind:wall"]},
   {"id":"minecraft:sunflower","tags":["kind:flower","kind:foliage"]},
