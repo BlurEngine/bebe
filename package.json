@@ -72,7 +72,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "packageManager": "npm@10.8.2",
+  "packageManager": "npm@10.9.0",
   "engines": {
     "node": ">=22.12.0"
   },
@@ -119,8 +119,8 @@
     }
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.7.0",
-    "@changesets/cli": "^2.29.7",
+    "@changesets/changelog-github": "^1.0.0",
+    "@changesets/cli": "^3.0.0",
     "@minecraft/server": "^2.3.0",
     "@minecraft/server-net": "^1.0.0-beta",
     "@minecraft/server-ui": "^2.0.0",
