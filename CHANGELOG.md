@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10.0
+
+### Minor Changes
+
+- [#65](https://github.com/BlurEngine/bebe/pull/65) [`d722e26`](https://github.com/BlurEngine/bebe/commit/d722e268d7e8c566ce6f7af75dad592452b8f685) Thanks [@SupaHam](https://github.com/SupaHam)! - Add exact authored-location packs, deterministic three-dimensional path maths,
+  Node-safe tooling exports, and reusable voxel key and quarter-turn primitives.
+  Keep the public maths barrel safe outside Minecraft while preserving the
+  Bedrock-compatible `Facing` contract.
+
 ## 0.9.0
 
 ### Minor Changes
